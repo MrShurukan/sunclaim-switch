@@ -1,0 +1,21 @@
+[package]
+name = "rust_game"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["staticlib"]
+test = false
+bench = false
+doctest = false
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+
+[dependencies]
+game_core = { path = "../game_core" }
+# For trigonometry
+libm = "0.2"
