@@ -1,8 +1,7 @@
 use crate::raylib::TextureError;
 
 pub struct Assets {
-    // TODO: Fill your romfs assets
-    // for example, Textures
+    pub 
 }
 
 impl Assets {

@@ -1,5 +1,9 @@
+use alloc::collections::BTreeMap;
+use alloc::string::String;
 use core::f32::consts::PI;
+use core::str::FromStr;
 use libm::sinf;
+use crate::raylib::Texture;
 
 /// Helper struct to modulate a value using a sine wave.
 /// from and to specify bounds, while period specifies how often it should pulse in seconds
@@ -31,4 +35,30 @@ impl SinePulser {
     pub fn pulse(&self, time: f32) -> f32 {
         self.midpoint + sinf(self.frequency_rad * time) * self.half_diff
     }
+}
+
+/// Helper struct to hold a texture atlas (like a sprite sheet) alongside with JSON data about it
+/// (only supports Aseprite). Later helps easily draw parts of the image by the key, defined
+/// with Shift + C (Slice Tool).
+///
+/// [K] has to implement [FromStr], as the keys specified by the aseprite will be used to construct
+/// your own keys (to avoid string allocations and whatnot)
+pub struct AsepriteSheet<K>
+where K : FromStr {
+    texture: Texture,
+    sections: BTreeMap<K, SpriteSheetSection>,
+}
+
+impl<K> AsepriteSheet<K> {
+    pub const fn new(texture: Texture, json: &str) -> Self {
+        
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+struct SpriteSheetSection {
+    x: usize,
+    y: usize,
+    width: usize,
+    height: usize,
 }

@@ -2,6 +2,7 @@ use alloc::string::String;
 
 use super::input::GameInput;
 use game_core::world::World;
+use crate::game::render::UiState;
 
 /// Major divisions of the game state. Fitting additions would be something like MainMenu,
 /// Settings, GameOver, etc.
@@ -23,6 +24,7 @@ pub struct ErrorInfo {
 pub struct Session {
     pub state: GameState,
     pub world: World,
+    pub ui_state: UiState,
     pub elapsed_time: f32,
 }
 
@@ -31,6 +33,7 @@ impl Session {
         Self {
             state: GameState::Running,
             world: World::new(),
+            ui_state: UiState::new(),
             elapsed_time: 0.0,
         }
     }
