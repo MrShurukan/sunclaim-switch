@@ -8,3 +8,5 @@ game_core/target
 *.lst
 *.nacp
 *.nro
+
+/docs/.obsidian/

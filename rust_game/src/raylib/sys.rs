@@ -72,6 +72,24 @@ unsafe extern "C" {
         tint: Color,
     );
 
+    pub fn DrawTexturePro(
+        texture: Texture2D,
+        source: Rect,
+        dest: Rect,
+        origin: Vec2,
+        rotation: c_float,
+        color: Color,
+    );
+
+    // Files
+    pub fn LoadFileText(
+        file_name: *const c_char,
+    ) -> *const c_char;
+
+    pub fn UnloadFileText(
+        file_text_data: *const c_char,
+    );
+
     // Text
     pub fn DrawText(
         text: *const c_char,

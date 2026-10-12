@@ -17,5 +17,14 @@ panic = "abort"
 
 [dependencies]
 game_core = { path = "../game_core" }
+
 # For trigonometry
 libm = "0.2"
+
+# For AsepriteSheet
+# TODO: Make these optional so people without the need for AsepriteSheet won't actually need this
+serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
+serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
+strum = { version = "0.28", default-features = false, features = ["derive"] }
+
+derive_more = { version = "2", default-features = false, features = ["from", "display"] }

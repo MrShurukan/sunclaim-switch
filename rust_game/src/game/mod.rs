@@ -3,8 +3,10 @@ mod controller;
 pub mod input;
 mod render;
 mod util;
+mod aseprite;
 
-use crate::raylib::{Frame, TextureError};
+use crate::game::assets::AssetError;
+use crate::raylib::Frame;
 use assets::Assets;
 use controller::Session;
 use input::GameInput;
@@ -19,8 +21,10 @@ pub struct Game {
     assets: Assets,
 }
 
+pub type GameError = AssetError;
+
 impl Game {
-    pub fn new() -> Result<Self, TextureError> {
+    pub fn new() -> Result<Self, GameError> {
         Ok(Self {
             session: Session::new(),
             assets: Assets::load()?,

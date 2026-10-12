@@ -8,10 +8,12 @@ mod raylib;
 mod game;
 mod panic_buffer;
 
+use alloc::ffi::CString;
+use alloc::format;
 use core::ffi::c_int;
 
 use crate::game::input::GameInput;
-use crate::game::Game;
+use crate::game::{Game, GameError};
 use crate::game::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use crate::raylib::Gamepad;
 use raylib::{
@@ -33,9 +35,11 @@ pub extern "C" fn rust_main() -> c_int {
 
     app.set_target_fps(60);
 
-    let Ok(mut game) = Game::new() else {
-        return 1;
+    let mut game = match Game::new() {
+        Ok(game) => game,
+        Err(e) => game_construction_error_loop(app, e),
     };
+
     let gamepad = Gamepad::new();
 
     while app.running() {
@@ -55,4 +59,34 @@ pub extern "C" fn rust_main() -> c_int {
     // when App is dropped.
 
     0
+}
+
+fn game_construction_error_loop(mut app: App, err: GameError) -> ! {
+    let c_string = CString::new(format!("{}", err)).expect("CString::new failed");
+    let error_text = c_string.as_c_str();
+
+    loop {
+        let mut frame = app.begin_frame(Color::PANIC_RED);
+
+        frame.const_text(
+            c"Startup failure!",
+            (40, 40).into(),
+            48,
+            Color::RED
+        );
+
+        frame.const_text(
+            c"Game::new() failed to initialize.",
+            (40, 120).into(),
+            22,
+            Color::WHITE
+        );
+
+        frame.const_text(
+            error_text,
+            (40, 160).into(),
+            22,
+            Color::WHITE
+        );
+    }
 }

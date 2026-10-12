@@ -1,8 +1,8 @@
 use alloc::string::String;
 
 use super::input::GameInput;
-use game_core::world::World;
 use crate::game::render::UiState;
+use game_core::world::World;
 
 /// Major divisions of the game state. Fitting additions would be something like MainMenu,
 /// Settings, GameOver, etc.

@@ -1,9 +1,8 @@
-use alloc::format;
-use game_core::tile::{TilePos, TILES_ARRAY_X_DIM, TILES_ARRAY_Y_DIM};
-use crate::game::{SCREEN_HEIGHT, SCREEN_WIDTH};
+use crate::game::SCREEN_WIDTH;
 use crate::raylib::{Color, Frame};
+use game_core::tile::{TilePos, TILES_ARRAY_X_DIM, TILES_ARRAY_Y_DIM};
 
-use super::assets::Assets;
+use super::assets::{Assets, Icons};
 use super::controller::{ErrorInfo, GameState, Session};
 
 #[derive(Debug)]
@@ -46,15 +45,18 @@ const TOP_BAR_HEIGHT: usize = 60;
 fn draw_top_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
     frame.rect((0, 0, SCREEN_WIDTH, TOP_BAR_HEIGHT).into(), Color::rgb(150, 150, 150));
 
-    frame.text(format!("Round {} - {}' turn"), (15, 18).into(), 20, Color::BLACK);
+    // TODO: Finish this
+    // frame.text(format!("Round {} - {}' turn"), (15, 18).into(), 20, Color::BLACK);
+    //
+    // frame.const_text(c"Metal (now -> after)", (100, 10).into(), 32, Color::BLACK);
+    // frame.text(format!("{} -> {}"), (100, 50).into(), 32, Color::BLACK);
+    //
+    // frame.const_text(c"Energy", (200, 10).into(), 32, Color::BLACK);
+    // frame.text(format!("{} -> {}"), (200, 50).into(), 32, Color::BLACK);
+    //
+    // frame.const_text(c"Assigned", ())
 
-    frame.const_text(c"Metal (now -> after)", (100, 10).into(), 32, Color::BLACK);
-    frame.text(format!("{} -> {}"), (100, 50).into(), 32, Color::BLACK);
-
-    frame.const_text(c"Energy", (200, 10).into(), 32, Color::BLACK);
-    frame.text(format!("{} -> {}"), (200, 50).into(), 32, Color::BLACK);
-
-    frame.const_text(c"Assigned", ())
+    assets.icons.draw(frame, Icons::Energy, (15, 18).into());
 }
 
 fn draw_side_panel(session: &Session, assets: &Assets, frame: &mut Frame) {

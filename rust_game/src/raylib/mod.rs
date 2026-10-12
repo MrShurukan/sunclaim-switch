@@ -1,7 +1,9 @@
 mod sys;
 
 use alloc::ffi::CString;
-
+use alloc::string::String;
+use core::ffi::c_char;
+use core::str::Utf8Error;
 use core::{
     ffi::{c_int, CStr},
     marker::PhantomData,
@@ -271,6 +273,9 @@ impl Color {
 
     pub const RAY_WHITE: Self =
         Self::rgb(245, 245, 245);
+
+    pub const PANIC_RED: Self =
+        Self::rgb(20, 0, 0);
 }
 
 // ============================================================
@@ -291,7 +296,7 @@ pub struct Texture {
     raw: Texture2D,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, derive_more::Display)]
 pub enum TextureError {
     LoadFailed,
 }
@@ -322,6 +327,53 @@ impl Drop for Texture {
     fn drop(&mut self) {
         unsafe {
             sys::UnloadTexture(self.raw);
+        }
+    }
+}
+
+// ============================================================
+// Files
+// ============================================================
+
+pub struct TextFile {
+    data: *const c_char,
+    data_str: String,
+}
+
+#[derive(Debug, Clone, Copy, derive_more::From)]
+pub enum TextFileError {
+    LoadFailed,
+    InvalidUtf8(Utf8Error),
+}
+
+impl TextFile {
+    pub fn load(path: &CStr) -> Result<Self, TextFileError> {
+        let data_ptr = unsafe {
+            sys::LoadFileText(path.as_ptr())
+        };
+
+        if data_ptr.is_null() {
+            return Err(TextFileError::LoadFailed);
+        }
+
+        let data_str = unsafe { CStr::from_ptr(data_ptr) };
+        let data_str = data_str.to_str()?.into();
+
+        Ok(TextFile {
+            data: data_ptr,
+            data_str
+        })
+    }
+
+    pub fn text_data(&self) -> &str {
+        self.data_str.as_str()
+    }
+}
+
+impl Drop for TextFile {
+    fn drop(&mut self) {
+        unsafe {
+            sys::UnloadFileText(self.data)
         }
     }
 }
@@ -736,6 +788,27 @@ impl Frame<'_> {
             );
         }
     }
+
+    pub fn texture_pro(
+        &mut self,
+        texture: &Texture,
+        source: Rect,
+        dest: Rect,
+        origin: Vec2,
+        rotation: f32,
+        tint: Color,
+    ) {
+        unsafe {
+            sys::DrawTexturePro(
+                texture.raw,
+                source,
+                dest,
+                origin,
+                rotation,
+                tint,
+            )
+        }
+    }
 }
 
 impl Drop for Frame<'_> {
@@ -766,9 +839,7 @@ pub(crate) fn panic_screen(
         unsafe {
             sys::BeginDrawing();
 
-            sys::ClearBackground(
-                Color::rgb(20, 0, 0)
-            );
+            sys::ClearBackground(Color::PANIC_RED);
 
             sys::DrawText(
                 c"FATAL ERROR".as_ptr(),
