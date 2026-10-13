@@ -1,4 +1,4 @@
-use crate::game::aseprite::{AsepriteSheet, AsepriteSheetError};
+use crate::game::aseprite::{AsepriteSheet, AsepriteSheetError, AsepriteSheetKey};
 use crate::raylib::TextureError;
 use alloc::format;
 use alloc::string::String;
@@ -6,6 +6,7 @@ use core::ffi::CStr;
 use core::fmt::Debug;
 use core::str::FromStr;
 
+impl AsepriteSheetKey for Icons {}
 #[derive(Debug, Copy, Clone, Ord, Eq, PartialEq, PartialOrd, strum::EnumString, strum::EnumIter)]
 pub enum Icons {
     Energy,
@@ -48,7 +49,7 @@ impl Assets {
 
 // TODO: Better readable errors for game startup
 fn load_aseprite_sheet<K>(texture_path: &CStr, json_path: &CStr) -> Result<AsepriteSheet<K>, String>
-where K: Debug + FromStr + Ord + strum::IntoEnumIterator {
+where K: Debug + AsepriteSheetKey {
     AsepriteSheet::load(c"romfs:/icons/icons.png", c"romfs:/icons/icons.json")
         .map_err(|e| {
             format!("texture_path: {}; json_path: {};\nerr: {:?}",

@@ -1,9 +1,10 @@
-use crate::game::SCREEN_WIDTH;
-use crate::raylib::{Color, Frame};
-use game_core::tile::{TilePos, TILES_ARRAY_X_DIM, TILES_ARRAY_Y_DIM};
-
 use super::assets::{Assets, Icons};
 use super::controller::{ErrorInfo, GameState, Session};
+use crate::game::aseprite::{AsepriteSheet, AsepriteSheetKey};
+use crate::game::SCREEN_WIDTH;
+use crate::raylib::{Color, Frame, Vec2};
+use alloc::format;
+use game_core::tile::{TilePos, TILES_ARRAY_X_DIM, TILES_ARRAY_Y_DIM};
 
 #[derive(Debug)]
 pub struct UiState {
@@ -43,20 +44,41 @@ fn draw_running(session: &Session, assets: &Assets, frame: &mut Frame) {
 const TOP_BAR_HEIGHT: usize = 60;
 
 fn draw_top_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
-    frame.rect((0, 0, SCREEN_WIDTH, TOP_BAR_HEIGHT).into(), Color::rgb(150, 150, 150));
+    frame.rect((0, 0, SCREEN_WIDTH, TOP_BAR_HEIGHT).into(), Color::rgb(17, 40, 71));
 
-    // TODO: Finish this
-    // frame.text(format!("Round {} - {}' turn"), (15, 18).into(), 20, Color::BLACK);
-    //
-    // frame.const_text(c"Metal (now -> after)", (100, 10).into(), 32, Color::BLACK);
-    // frame.text(format!("{} -> {}"), (100, 50).into(), 32, Color::BLACK);
-    //
-    // frame.const_text(c"Energy", (200, 10).into(), 32, Color::BLACK);
-    // frame.text(format!("{} -> {}"), (200, 50).into(), 32, Color::BLACK);
-    //
-    // frame.const_text(c"Assigned", ())
+    frame.text(
+        &format!("Round {} - {}'s turn", session.world.round_number(), session.world.active_player_side().name()),
+        (15, 21).into(),
+        20,
+        Color::WHITE
+    );
 
-    assets.icons.draw(frame, Icons::Energy, (15, 18).into());
+    icon_with_text(
+        frame,
+        &assets.icons,
+        Icons::Metal,
+        &format!("{} -> {}", session.world.active_player().metal(), 0),
+        (680, 14).into(),
+        Color::WHITE
+    );
+
+    icon_with_text(
+        frame,
+        &assets.icons,
+        Icons::Energy,
+        &format!("{} -> {}", session.world.active_player().energy(), 0),
+        (886, 14).into(),
+        Color::WHITE
+    );
+
+    icon_with_text(
+        frame,
+        &assets.icons,
+        Icons::Action,
+        &"0/4 assigned",
+        (1092, 14).into(),
+        Color::WHITE
+    );
 }
 
 fn draw_side_panel(session: &Session, assets: &Assets, frame: &mut Frame) {
@@ -81,4 +103,18 @@ fn draw_error(error_info: &ErrorInfo, frame: &mut Frame) {
     frame.text(&error_info.origination, (100, 150).into(), 24, Color::WHITE);
 
     frame.const_text(c"Press ZL + Minus to reset.", (100, 400).into(), 24, Color::BLUE)
+}
+
+fn icon_with_text<K: AsepriteSheetKey>(
+    frame: &mut Frame,
+    sheet: &AsepriteSheet<K>,
+    icon_key: K,
+    text: &str,
+    position: Vec2,
+    color: Color
+) {
+    let icon_size = sheet.draw(frame, icon_key, position);
+
+    let position = position.translate(icon_size.x + 6.0, 8.0);
+    frame.text(text, position, 20, color);
 }

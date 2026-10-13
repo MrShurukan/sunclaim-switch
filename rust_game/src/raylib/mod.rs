@@ -56,6 +56,10 @@ impl Vec2 {
             self
         }
     }
+
+    pub fn translate(self, dx: f32, dy: f32) -> Self {
+        Self { x: self.x + dx, y: self.y + dy }
+    }
 }
 
 impl Add for Vec2 {

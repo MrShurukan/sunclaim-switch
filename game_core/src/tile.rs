@@ -8,11 +8,11 @@ pub struct Tile {
 }
 
 impl Tile {
-    pub fn new(tile_pos: TilePos) -> Self {
+    pub const fn new(tile_pos: TilePos) -> Self {
         Self { tile_pos }
     }
 
-    pub fn tile_pos(&self) -> TilePos {
+    pub const fn tile_pos(&self) -> TilePos {
         self.tile_pos
     }
 }

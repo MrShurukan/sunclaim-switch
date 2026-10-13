@@ -7,6 +7,8 @@ use core::str::FromStr;
 use serde::Deserialize;
 use AsepriteSheetError::*;
 
+pub trait AsepriteSheetKey: FromStr + Ord + strum::IntoEnumIterator {}
+
 /// Helper struct to hold a texture atlas (like a sprite sheet) alongside with JSON data about it
 /// (only supports Aseprite). Struct helps easily draw parts of the image by the key, defined
 /// with Shift + C (Slice Tool).
@@ -16,7 +18,7 @@ use AsepriteSheetError::*;
 ///
 /// [K] also has to implement [Ord] for internal storage and [strum::IntoEnumIterator] for verifying
 /// that all keys are covered inside json
-pub struct AsepriteSheet<K: FromStr + Ord + strum::IntoEnumIterator> {
+pub struct AsepriteSheet<K: AsepriteSheetKey> {
     texture: Texture,
     sections: BTreeMap<K, SpriteSheetSection>,
 }
@@ -37,7 +39,7 @@ pub enum AsepriteSheetError<K> {
     MissingEnumVariant(K),
 }
 
-impl<K: FromStr + Ord + strum::IntoEnumIterator> AsepriteSheet<K> {
+impl<K: AsepriteSheetKey> AsepriteSheet<K> {
     pub fn load(texture_path: &CStr, json_path: &CStr) -> Result<Self, AsepriteSheetError<K>> {
         let texture = Texture::load(texture_path)?;
         let json_file = TextFile::load(json_path)?;
@@ -81,12 +83,16 @@ impl<K: FromStr + Ord + strum::IntoEnumIterator> AsepriteSheet<K> {
 
     /// Draw a sprite from the sheet with a native size (i.e. the same as in the sprite sheet) on
     /// the specified location
-    pub fn draw(&self, frame: &mut Frame, key: K, location: Vec2) {
+    ///
+    /// Returns the size of the drawn image
+    pub fn draw(&self, frame: &mut Frame, key: K, location: Vec2) -> Vec2 {
         let source = self.sections.get(&key).expect("validated in constructor");
 
         let dest = (location.x, location.y, source.width as f32, source.height as f32).into();
 
         frame.texture_pro(&self.texture, (*source).into(), dest, (0, 0).into(), 0f32, Color::WHITE);
+
+        (source.width, source.height).into()
     }
 
     pub fn draw_resize(&self, frame: &mut Frame, key: K, location: Rect) {
