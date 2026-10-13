@@ -27,8 +27,24 @@ pub enum Icons {
     PlusButton,
 }
 
+impl AsepriteSheetKey for TileSprites {}
+#[derive(Debug, Copy, Clone, Ord, Eq, PartialEq, PartialOrd, strum::EnumString, strum::EnumIter)]
+pub enum TileSprites {
+    ReactorRed,
+    ReactorBlue,
+    WallLeft,
+    WallRight,
+    WallDown,
+    WallUp,
+    MinerRed,
+    MinerBlue,
+    CursorRed,
+    CursorBlue,
+}
+
 pub struct Assets {
     pub icons: AsepriteSheet<Icons>,
+    pub tiles: AsepriteSheet<TileSprites>,
 }
 
 #[derive(Debug, derive_more::From, derive_more::Display)]
@@ -42,7 +58,8 @@ pub enum AssetError {
 impl Assets {
     pub fn load() -> Result<Self, AssetError> {
         Ok(Self {
-            icons: load_aseprite_sheet(c"romfs:/icons/icons.png", c"romfs:/icons/icons.json")?
+            icons: load_aseprite_sheet(c"romfs:/icons/icons.png", c"romfs:/icons/icons.json")?,
+            tiles: load_aseprite_sheet(c"romfs:/tiles/tiles.png", c"romfs:/tiles/tiles.json")?,
         })
     }
 }
@@ -50,7 +67,7 @@ impl Assets {
 // TODO: Better readable errors for game startup
 fn load_aseprite_sheet<K>(texture_path: &CStr, json_path: &CStr) -> Result<AsepriteSheet<K>, String>
 where K: Debug + AsepriteSheetKey {
-    AsepriteSheet::load(c"romfs:/icons/icons.png", c"romfs:/icons/icons.json")
+    AsepriteSheet::load(texture_path, json_path)
         .map_err(|e| {
             format!("texture_path: {}; json_path: {};\nerr: {:?}",
                     texture_path.to_str().unwrap(),

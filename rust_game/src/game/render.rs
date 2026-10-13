@@ -1,21 +1,29 @@
-use super::assets::{Assets, Icons};
+use super::assets::{Assets, Icons, TileSprites};
 use super::controller::{ErrorInfo, GameState, Session};
 use crate::game::aseprite::{AsepriteSheet, AsepriteSheetKey};
+use crate::game::util::SinePulser;
 use crate::game::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use crate::raylib::{Color, Frame, Vec2};
 use alloc::format;
+use game_core::player::PlayerSide;
 use game_core::tile::{TilePos, TILES_ARRAY_X_DIM, TILES_ARRAY_Y_DIM};
+
+#[derive(Debug, Copy, Clone)]
+pub enum PanelState {
+    Minimized,
+    Expanded
+}
 
 #[derive(Debug)]
 pub struct UiState {
-    panel_visible: bool,
+    panel_state: PanelState,
     cursor_pos: TilePos,
 }
 
 impl UiState {
     pub fn new() -> Self {
         Self {
-            panel_visible: true,
+            panel_state: PanelState::Minimized,
             cursor_pos: TilePos::new(0, 0).unwrap(),
         }
     }
@@ -32,13 +40,13 @@ pub fn draw(session: &Session, assets: &Assets, frame: &mut Frame) {
 fn draw_running(session: &Session, assets: &Assets, frame: &mut Frame) {
     // UI
     draw_top_bar(session, assets, frame);
-    if session.ui_state.panel_visible {
-        draw_side_panel(session, assets, frame);
-    }
+    draw_side_panel(session, assets, frame);
     draw_bottom_bar(session, assets, frame);
 
     // Field
     draw_field(session, assets, frame);
+
+    draw_cursor(session, assets, frame);
 }
 
 const TOP_BAR_HEIGHT: usize = 60;
@@ -143,6 +151,27 @@ fn vertical_line(frame: &mut Frame, x: usize) {
 #[inline]
 fn horizontal_line(frame: &mut Frame, y: usize) {
     frame.line((0, y).into(), (FIELD_WIDTH, y).into(), 1., Color::WHITE);
+}
+
+const CURSOR_PULSER: SinePulser = SinePulser::new(0.5, 1.0, 5.0);
+
+fn draw_cursor(session: &Session, assets: &Assets, frame: &mut Frame) {
+    let cursor_tile = match session.world.active_player_side() {
+        PlayerSide::Red => TileSprites::CursorRed,
+        PlayerSide::Blue => TileSprites::CursorBlue,
+    };
+
+    let position = session.ui_state.cursor_pos;
+
+    let alpha = (255.0 * libm::powf(CURSOR_PULSER.pulse(session.elapsed_time), 0.4)) as u8;
+    let tint = Color::rgba(255, 255, 255, alpha);
+
+    assets.tiles.draw_tint(
+        frame,
+        cursor_tile,
+        (position.x() * TILE_SIZE, FIELD_Y_START + position.y() * TILE_SIZE).into(),
+        tint
+    );
 }
 
 fn draw_error(error_info: &ErrorInfo, frame: &mut Frame) {

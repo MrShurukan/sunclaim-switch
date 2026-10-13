@@ -17,7 +17,7 @@ impl Tile {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, derive_more::Into)]
 pub struct TilePos {
     x: usize,
     y: usize,

@@ -86,11 +86,19 @@ impl<K: AsepriteSheetKey> AsepriteSheet<K> {
     ///
     /// Returns the size of the drawn image
     pub fn draw(&self, frame: &mut Frame, key: K, location: Vec2) -> Vec2 {
+        self.draw_tint(frame, key, location, Color::WHITE)
+    }
+
+    /// Draw a sprite from the sheet with a native size (i.e. the same as in the sprite sheet) on
+    /// the specified location, also tint it
+    ///
+    /// Returns the size of the drawn image
+    pub fn draw_tint(&self, frame: &mut Frame, key: K, location: Vec2, tint_color: Color) -> Vec2 {
         let source = self.sections.get(&key).expect("validated in constructor");
 
         let dest = (location.x, location.y, source.width as f32, source.height as f32).into();
 
-        frame.texture_pro(&self.texture, (*source).into(), dest, (0, 0).into(), 0f32, Color::WHITE);
+        frame.texture_pro(&self.texture, (*source).into(), dest, (0, 0).into(), 0f32, tint_color);
 
         (source.width, source.height).into()
     }
