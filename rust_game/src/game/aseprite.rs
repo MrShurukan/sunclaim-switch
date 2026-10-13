@@ -7,7 +7,7 @@ use core::str::FromStr;
 use serde::Deserialize;
 use AsepriteSheetError::*;
 
-pub trait AsepriteSheetKey: FromStr + Ord + strum::IntoEnumIterator {}
+pub trait AsepriteSheetKey: Copy + FromStr + Ord + strum::IntoEnumIterator {}
 
 /// Helper struct to hold a texture atlas (like a sprite sheet) alongside with JSON data about it
 /// (only supports Aseprite). Struct helps easily draw parts of the image by the key, defined

@@ -1,7 +1,7 @@
 use super::assets::{Assets, Icons};
 use super::controller::{ErrorInfo, GameState, Session};
 use crate::game::aseprite::{AsepriteSheet, AsepriteSheetKey};
-use crate::game::SCREEN_WIDTH;
+use crate::game::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use crate::raylib::{Color, Frame, Vec2};
 use alloc::format;
 use game_core::tile::{TilePos, TILES_ARRAY_X_DIM, TILES_ARRAY_Y_DIM};
@@ -42,9 +42,10 @@ fn draw_running(session: &Session, assets: &Assets, frame: &mut Frame) {
 }
 
 const TOP_BAR_HEIGHT: usize = 60;
+const BAR_COLOR: Color = Color::rgb(17, 40, 71);
 
 fn draw_top_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
-    frame.rect((0, 0, SCREEN_WIDTH, TOP_BAR_HEIGHT).into(), Color::rgb(17, 40, 71));
+    frame.rect((0, 0, SCREEN_WIDTH, TOP_BAR_HEIGHT).into(), BAR_COLOR);
 
     frame.text(
         &format!("Round {} - {}'s turn", session.world.round_number(), session.world.active_player_side().name()),
@@ -75,26 +76,73 @@ fn draw_top_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
         frame,
         &assets.icons,
         Icons::Action,
-        &"0/4 assigned",
+        "0/4 assigned",
         (1092, 14).into(),
         Color::WHITE
     );
 }
 
-fn draw_side_panel(session: &Session, assets: &Assets, frame: &mut Frame) {
+const SIDE_PANEL_START_X: usize = FIELD_WIDTH;
+const SIDE_PANEL_START_Y: usize = TOP_BAR_HEIGHT;
+const SIDE_PANEL_HEIGHT: usize = BOTTOM_BAR_START_Y - SIDE_PANEL_START_Y;
+const SIDE_PANEL_WIDTH: usize = SCREEN_WIDTH - SIDE_PANEL_START_X;
 
+const SIDE_PANEL_COLOR: Color = Color::rgb(12, 29, 51);
+
+fn draw_side_panel(session: &Session, assets: &Assets, frame: &mut Frame) {
+    // TODO: Expanded panel
+    frame.rect(
+        (SIDE_PANEL_START_X, SIDE_PANEL_START_Y, SIDE_PANEL_WIDTH, SIDE_PANEL_HEIGHT).into(),
+        SIDE_PANEL_COLOR
+    );
+
+    // TODO: Sidepanel info
 }
+
+const BOTTOM_BAR_START_Y: usize = TOP_BAR_HEIGHT + FIELD_HEIGHT;
+const BOTTOM_BAR_HEIGHT: usize = SCREEN_HEIGHT - BOTTOM_BAR_START_Y;
 
 fn draw_bottom_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
+    frame.rect((0, BOTTOM_BAR_START_Y, SCREEN_WIDTH, BOTTOM_BAR_HEIGHT).into(), BAR_COLOR);
 
+    // TODO: Display help based on the current UI state
+    // TODO: Make it a streamlined experience showing predefined help from an array and calculating coords automatically
+    const Y: usize = BOTTOM_BAR_START_Y + 26;
+
+    icon_with_text(frame, &assets.icons, Icons::DPad, "Cursor", (15, Y).into(), Color::WHITE);
+    icon_with_text(frame, &assets.icons, Icons::A, "Selection", (144, Y).into(), Color::WHITE);
+    icons_with_text(frame, &assets.icons,
+                    &[Icons::LButton, Icons::RButton], "Mode", (297, Y).into(), Color::WHITE);
+    icon_with_text(frame, &assets.icons, Icons::MinusButton, "Panel/Field", (445, Y).into(), Color::WHITE);
+    icon_with_text(frame, &assets.icons, Icons::Y, "Finish turn", (615, Y).into(), Color::WHITE);
 }
 
-const TILE_SIZE: usize = 40;
+const TILE_SIZE: usize = 48;
+const FIELD_Y_START: usize = TOP_BAR_HEIGHT;
 const FIELD_WIDTH: usize = TILE_SIZE * TILES_ARRAY_X_DIM;
 const FIELD_HEIGHT: usize = TILE_SIZE * TILES_ARRAY_Y_DIM;
 
 fn draw_field(session: &Session, assets: &Assets, frame: &mut Frame) {
+    frame.rect((0, 60, FIELD_WIDTH, FIELD_HEIGHT).into(), Color::rgb(194, 137, 81));
 
+    // Grid
+    for i in 0..=TILES_ARRAY_X_DIM {
+        vertical_line(frame, i * TILE_SIZE);
+
+        for j in 0..=TILES_ARRAY_Y_DIM {
+            horizontal_line(frame, j * TILE_SIZE + TOP_BAR_HEIGHT);
+        }
+    }
+}
+
+#[inline]
+fn vertical_line(frame: &mut Frame, x: usize) {
+    frame.line((x, FIELD_Y_START).into(), (x, FIELD_HEIGHT + TOP_BAR_HEIGHT).into(), 1., Color::WHITE);
+}
+
+#[inline]
+fn horizontal_line(frame: &mut Frame, y: usize) {
+    frame.line((0, y).into(), (FIELD_WIDTH, y).into(), 1., Color::WHITE);
 }
 
 fn draw_error(error_info: &ErrorInfo, frame: &mut Frame) {
@@ -116,5 +164,22 @@ fn icon_with_text<K: AsepriteSheetKey>(
     let icon_size = sheet.draw(frame, icon_key, position);
 
     let position = position.translate(icon_size.x + 6.0, 8.0);
+    frame.text(text, position, 20, color);
+}
+
+fn icons_with_text<K: AsepriteSheetKey>(
+    frame: &mut Frame,
+    sheet: &AsepriteSheet<K>,
+    icon_keys: &[K],
+    text: &str,
+    mut position: Vec2,
+    color: Color
+) {
+    for key in icon_keys {
+        let icon_size = sheet.draw(frame, *key, position);
+        position = position.translate(icon_size.x + 7.0, 0.0);
+    }
+
+    position = position.translate(0.0, 8.0);
     frame.text(text, position, 20, color);
 }
