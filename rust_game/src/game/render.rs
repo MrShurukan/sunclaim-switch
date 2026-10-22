@@ -1,12 +1,13 @@
-use super::assets::{Assets, Icons, TileSprites};
+use super::assets::{Assets, Icon, TileSprite};
 use super::controller::{ErrorInfo, GameState, Session};
 use crate::game::aseprite::{AsepriteSheet, AsepriteSheetKey};
 use crate::game::util::SinePulser;
 use crate::game::{SCREEN_HEIGHT, SCREEN_WIDTH};
 use crate::raylib::{Color, Frame, Vec2};
 use alloc::format;
+use game_core::direction::Direction;
 use game_core::player::PlayerSide;
-use game_core::tile::{TilePos, TILES_ARRAY_X_DIM, TILES_ARRAY_Y_DIM};
+use game_core::tile::{TilePos, TilePosError, TILES_ARRAY_X_DIM, TILES_ARRAY_Y_DIM};
 
 #[derive(Debug, Copy, Clone)]
 pub enum PanelState {
@@ -18,6 +19,38 @@ pub enum PanelState {
 pub struct UiState {
     panel_state: PanelState,
     cursor_pos: TilePos,
+    direction_hold_info: Option<DirectionHoldInfo>,
+}
+
+#[derive(Debug, Copy, Clone)]
+struct DirectionHoldInfo {
+    direction: Direction,
+    hold_pause_left: f32,
+}
+
+impl DirectionHoldInfo {
+    const FIRST_PRESS_DELAY: f32 = 0.5;
+    const FOLLOWING_PRESS_DELAY: f32 = 0.1;
+
+    pub fn new_first(direction: Direction) -> Self {
+        Self {
+            direction,
+            hold_pause_left: Self::FIRST_PRESS_DELAY,
+        }
+    }
+
+    pub fn new_following(direction: Direction) -> Self {
+        Self {
+            direction,
+            hold_pause_left: Self::FOLLOWING_PRESS_DELAY,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, derive_more::From)]
+pub enum CursorMoveError {
+    InvalidCursorPosition(TilePosError),
+    PanelIsOpen
 }
 
 impl UiState {
@@ -25,7 +58,56 @@ impl UiState {
         Self {
             panel_state: PanelState::Minimized,
             cursor_pos: TilePos::new(0, 0).unwrap(),
+            direction_hold_info: None,
         }
+    }
+
+    fn try_translate_cursor(&mut self, dir: Direction) -> Result<(), CursorMoveError> {
+        if !matches!(self.panel_state, PanelState::Minimized) {
+            return Err(CursorMoveError::PanelIsOpen);
+        }
+
+        self.cursor_pos = self.cursor_pos.translate(dir)?;
+
+        Ok(())
+    }
+
+    pub fn direction_held(&mut self, dir: Option<Direction>, dt: f32) {
+        // Button released
+        if dir.is_none() {
+            self.direction_hold_info = None;
+            return;
+        }
+
+        let dir = dir.unwrap();
+
+        match &mut self.direction_hold_info {
+            // First press, we advance the cursor (if possible) and remember the button was pressed
+            None => self.new_direction_pressed(dir),
+
+            // Following presses
+            Some(info) => {
+                // Did we change the direction?
+                if info.direction != dir {
+                    self.new_direction_pressed(dir);
+                    return;
+                }
+
+                // Otherwise proceed to calculate time
+                info.hold_pause_left -= dt;
+                if info.hold_pause_left < 0.0 {
+                    let _ = self.try_translate_cursor(dir);
+                    self.direction_hold_info = Some(DirectionHoldInfo::new_following(dir));
+                }
+            }
+        }
+    }
+
+    #[inline]
+    fn new_direction_pressed(&mut self, dir: Direction) {
+        let _ = self.try_translate_cursor(dir);
+
+        self.direction_hold_info = Some(DirectionHoldInfo::new_first(dir));
     }
 }
 
@@ -65,7 +147,7 @@ fn draw_top_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
     icon_with_text(
         frame,
         &assets.icons,
-        Icons::Metal,
+        Icon::Metal,
         &format!("{} -> {}", session.world.active_player().metal(), 0),
         (680, 14).into(),
         Color::WHITE
@@ -74,7 +156,7 @@ fn draw_top_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
     icon_with_text(
         frame,
         &assets.icons,
-        Icons::Energy,
+        Icon::Energy,
         &format!("{} -> {}", session.world.active_player().energy(), 0),
         (886, 14).into(),
         Color::WHITE
@@ -83,7 +165,7 @@ fn draw_top_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
     icon_with_text(
         frame,
         &assets.icons,
-        Icons::Action,
+        Icon::Action,
         "0/4 assigned",
         (1092, 14).into(),
         Color::WHITE
@@ -117,12 +199,12 @@ fn draw_bottom_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
     // TODO: Make it a streamlined experience showing predefined help from an array and calculating coords automatically
     const Y: usize = BOTTOM_BAR_START_Y + 26;
 
-    icon_with_text(frame, &assets.icons, Icons::DPad, "Cursor", (15, Y).into(), Color::WHITE);
-    icon_with_text(frame, &assets.icons, Icons::A, "Selection", (144, Y).into(), Color::WHITE);
+    icon_with_text(frame, &assets.icons, Icon::DPad, "Cursor", (15, Y).into(), Color::WHITE);
+    icon_with_text(frame, &assets.icons, Icon::A, "Selection", (144, Y).into(), Color::WHITE);
     icons_with_text(frame, &assets.icons,
-                    &[Icons::LButton, Icons::RButton], "Mode", (297, Y).into(), Color::WHITE);
-    icon_with_text(frame, &assets.icons, Icons::MinusButton, "Panel/Field", (445, Y).into(), Color::WHITE);
-    icon_with_text(frame, &assets.icons, Icons::Y, "Finish turn", (615, Y).into(), Color::WHITE);
+                    &[Icon::LButton, Icon::RButton], "Mode", (297, Y).into(), Color::WHITE);
+    icon_with_text(frame, &assets.icons, Icon::MinusButton, "Panel/Field", (445, Y).into(), Color::WHITE);
+    icon_with_text(frame, &assets.icons, Icon::Y, "Finish turn", (615, Y).into(), Color::WHITE);
 }
 
 const TILE_SIZE: usize = 48;
@@ -157,8 +239,8 @@ const CURSOR_PULSER: SinePulser = SinePulser::new(0.5, 1.0, 5.0);
 
 fn draw_cursor(session: &Session, assets: &Assets, frame: &mut Frame) {
     let cursor_tile = match session.world.active_player_side() {
-        PlayerSide::Red => TileSprites::CursorRed,
-        PlayerSide::Blue => TileSprites::CursorBlue,
+        PlayerSide::Red => TileSprite::CursorRed,
+        PlayerSide::Blue => TileSprite::CursorBlue,
     };
 
     let position = session.ui_state.cursor_pos;

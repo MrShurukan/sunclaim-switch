@@ -1,22 +1,46 @@
 use crate::raylib::{Button, Gamepad};
+use game_core::direction::Direction;
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct GameInput {
     pub reset: bool,
-    // TODO: Add input needed by your game
+    /// Only has Some on the very frame the button was pressed
+    pub direction_pressed: Option<Direction>,
+    /// Has Some if direction is held down
+    pub direction_raw: Option<Direction>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Direction {
-    Up,
-    Right,
-    Left,
-    Down
+trait GamepadRead {
+    fn from_gamepad(gamepad: &Gamepad) -> Option<Self> where Self: Sized;
+    fn from_gamepad_raw(gamepad: &Gamepad) -> Option<Self> where Self: Sized;
 }
-
-impl Direction {
+impl GamepadRead for Direction {
     fn from_gamepad(gamepad: &Gamepad) -> Option<Direction> {
-        if gamepad.pressed(Button::Up) { Some(Direction::Up) } else if gamepad.pressed(Button::Right) { Some(Direction::Right) } else if gamepad.pressed(Button::Left) { Some(Direction::Left) } else if gamepad.pressed(Button::Down) { Some(Direction::Down) } else { None }
+        if gamepad.down(Button::Up) {
+            Some(Direction::Up)
+        } else if gamepad.pressed(Button::Right) {
+            Some(Direction::Right)
+        } else if gamepad.pressed(Button::Left) {
+            Some(Direction::Left)
+        } else if gamepad.pressed(Button::Down) {
+            Some(Direction::Down)
+        } else {
+            None
+        }
+    }
+
+    fn from_gamepad_raw(gamepad: &Gamepad) -> Option<Direction> {
+        if gamepad.down(Button::Up) {
+            Some(Direction::Up)
+        } else if gamepad.down(Button::Right) {
+            Some(Direction::Right)
+        } else if gamepad.down(Button::Left) {
+            Some(Direction::Left)
+        } else if gamepad.down(Button::Down) {
+            Some(Direction::Down)
+        } else {
+            None
+        }
     }
 }
 
@@ -27,8 +51,8 @@ impl GameInput {
                 (gamepad.pressed(Button::Minus) && gamepad.down(Button::ZL)) ||
                 (gamepad.pressed(Button::ZL)    && gamepad.down(Button::Minus)),
 
-            // TODO: More input can be added in a similar way, for instance:
-            // direction: Direction::from_gamepad(gamepad),
+            direction_pressed: Direction::from_gamepad(gamepad),
+            direction_raw: Direction::from_gamepad_raw(gamepad),
         }
     }
 }

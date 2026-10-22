@@ -7,3 +7,4 @@ pub mod tile;
 mod building;
 pub mod player;
 pub mod resources;
+pub mod direction;

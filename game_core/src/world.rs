@@ -9,7 +9,13 @@ pub struct World {
 
     round_number: u32,
     active_player: PlayerSide,
+    turn_phase: TurnPhase,
     players: [Player; 2],
+}
+
+#[derive(Debug)]
+pub enum TurnPhase {
+    Plan,
 }
 
 impl World {
@@ -24,6 +30,7 @@ impl World {
 
             round_number: 1,
             active_player: PlayerSide::Red,
+            turn_phase: TurnPhase::Plan,
             players: [Player::new(PlayerSide::Red), Player::new(PlayerSide::Blue)],
         }
     }
@@ -38,5 +45,9 @@ impl World {
 
     pub const fn active_player(&self) -> &Player {
         &self.players[self.active_player.index()]
+    }
+
+    pub const fn turn_phase(&self) -> &TurnPhase {
+        &self.turn_phase
     }
 }

@@ -1,14 +1,13 @@
-use crate::game::aseprite::{AsepriteSheet, AsepriteSheetError, AsepriteSheetKey};
+use crate::game::aseprite::{AsepriteSheet, AsepriteSheetKey};
 use crate::raylib::TextureError;
 use alloc::format;
 use alloc::string::String;
 use core::ffi::CStr;
 use core::fmt::Debug;
-use core::str::FromStr;
 
-impl AsepriteSheetKey for Icons {}
+impl AsepriteSheetKey for Icon {}
 #[derive(Debug, Copy, Clone, Ord, Eq, PartialEq, PartialOrd, strum::EnumString, strum::EnumIter)]
-pub enum Icons {
+pub enum Icon {
     Energy,
     Metal,
     Action,
@@ -27,9 +26,9 @@ pub enum Icons {
     PlusButton,
 }
 
-impl AsepriteSheetKey for TileSprites {}
+impl AsepriteSheetKey for TileSprite {}
 #[derive(Debug, Copy, Clone, Ord, Eq, PartialEq, PartialOrd, strum::EnumString, strum::EnumIter)]
-pub enum TileSprites {
+pub enum TileSprite {
     ReactorRed,
     ReactorBlue,
     WallLeft,
@@ -43,8 +42,8 @@ pub enum TileSprites {
 }
 
 pub struct Assets {
-    pub icons: AsepriteSheet<Icons>,
-    pub tiles: AsepriteSheet<TileSprites>,
+    pub icons: AsepriteSheet<Icon>,
+    pub tiles: AsepriteSheet<TileSprite>,
 }
 
 #[derive(Debug, derive_more::From, derive_more::Display)]

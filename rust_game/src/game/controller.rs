@@ -1,8 +1,7 @@
-use alloc::string::String;
-
 use super::input::GameInput;
 use crate::game::render::UiState;
-use game_core::world::World;
+use alloc::string::String;
+use game_core::world::{TurnPhase, World};
 
 /// Major divisions of the game state. Fitting additions would be something like MainMenu,
 /// Settings, GameOver, etc.
@@ -43,10 +42,21 @@ impl Session {
 pub fn update(session: &mut Session, input: &GameInput, dt: f32) {
     session.elapsed_time += dt;
 
-    match &mut session.state {
+    match session.state {
         GameState::Running => {
-            // TODO: Process input and update the world here
+            update_running(session, input, dt);
         },
         GameState::Error(_) => {},
     }
+}
+
+fn update_running(session: &mut Session, input: &GameInput, dt: f32) {
+    match session.world.turn_phase() {
+        TurnPhase::Plan => update_plan(session, input, dt),
+    }
+}
+
+fn update_plan(session: &mut Session, input: &GameInput, dt: f32) {
+    // Cursor move
+    session.ui_state.direction_held(input.direction_raw, dt);
 }
