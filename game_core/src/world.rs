@@ -1,5 +1,8 @@
+use crate::building::{Building, BuildingKind, MINER_BLUE_START, MINER_RED_START, REACTOR_BLUE_START, REACTOR_RED_START};
 use crate::player::{Player, PlayerSide};
 use crate::tile::{Tile, TilePos, TILES_ARRAY_SIZE, TILES_ARRAY_X_DIM};
+use alloc::vec;
+use alloc::vec::Vec;
 
 pub type TileArray = [Tile; TILES_ARRAY_SIZE];
 
@@ -11,6 +14,7 @@ pub struct World {
     active_player: PlayerSide,
     turn_phase: TurnPhase,
     players: [Player; 2],
+    buildings: Vec<Building>
 }
 
 #[derive(Debug)]
@@ -32,6 +36,12 @@ impl World {
             active_player: PlayerSide::Red,
             turn_phase: TurnPhase::Plan,
             players: [Player::new(PlayerSide::Red), Player::new(PlayerSide::Blue)],
+            buildings: vec![
+                Building::new(PlayerSide::Red,  REACTOR_RED_START,  BuildingKind::Reactor),
+                Building::new(PlayerSide::Red,  MINER_RED_START,    BuildingKind::Miner),
+                Building::new(PlayerSide::Blue, REACTOR_BLUE_START, BuildingKind::Reactor),
+                Building::new(PlayerSide::Blue, MINER_BLUE_START,   BuildingKind::Miner),
+            ]
         }
     }
 
@@ -49,5 +59,9 @@ impl World {
 
     pub const fn turn_phase(&self) -> &TurnPhase {
         &self.turn_phase
+    }
+
+    pub fn buildings(&self) -> &[Building] {
+        &self.buildings
     }
 }

@@ -1,4 +1,4 @@
-use super::assets::{Assets, Icon, TileSprite};
+use super::assets::{Assets, Icon, TileDrawable, TileSprite};
 use super::controller::{ErrorInfo, GameState, Session};
 use crate::game::aseprite::{AsepriteSheet, AsepriteSheetKey};
 use crate::game::util::SinePulser;
@@ -217,12 +217,34 @@ fn draw_field(session: &Session, assets: &Assets, frame: &mut Frame) {
 
     // Grid
     for i in 0..=TILES_ARRAY_X_DIM {
-        vertical_line(frame, i * TILE_SIZE);
+        vertical_line(frame, x_to_screen_coordinates(i));
 
         for j in 0..=TILES_ARRAY_Y_DIM {
-            horizontal_line(frame, j * TILE_SIZE + TOP_BAR_HEIGHT);
+            horizontal_line(frame, y_to_screen_coordinates(j));
         }
     }
+
+    // Buildings
+    for building in session.world.buildings() {
+        let screen_pos = to_screen_coordinates(building.position());
+
+        assets.tiles.draw(frame, building.kind().tile_sprite(building.owner()), screen_pos);
+    }
+}
+
+#[inline]
+fn to_screen_coordinates(pos: TilePos) -> Vec2 {
+    (x_to_screen_coordinates(pos.x()), y_to_screen_coordinates(pos.y())).into()
+}
+
+#[inline]
+fn x_to_screen_coordinates(x: usize) -> usize {
+    x * TILE_SIZE
+}
+
+#[inline]
+fn y_to_screen_coordinates(y: usize) -> usize {
+    y * TILE_SIZE + TOP_BAR_HEIGHT
 }
 
 #[inline]

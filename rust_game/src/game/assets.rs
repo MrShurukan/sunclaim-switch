@@ -4,6 +4,8 @@ use alloc::format;
 use alloc::string::String;
 use core::ffi::CStr;
 use core::fmt::Debug;
+use game_core::building::BuildingKind;
+use game_core::player::PlayerSide;
 
 impl AsepriteSheetKey for Icon {}
 #[derive(Debug, Copy, Clone, Ord, Eq, PartialEq, PartialOrd, strum::EnumString, strum::EnumIter)]
@@ -39,6 +41,34 @@ pub enum TileSprite {
     MinerBlue,
     CursorRed,
     CursorBlue,
+}
+
+pub trait TileDrawable {
+    fn tile_sprite(&self, player_side: PlayerSide) -> TileSprite;
+}
+
+macro_rules! building_tiles {
+    ($kind:expr, $side:expr; $(
+        $building:ident => ($red:ident, $blue:ident)
+    ),* $(,)?) => {
+        match ($kind, $side) {
+            $(
+                (BuildingKind::$building, PlayerSide::Red) =>
+                    TileSprite::$red,
+                (BuildingKind::$building, PlayerSide::Blue) =>
+                    TileSprite::$blue,
+            )*
+        }
+    };
+}
+
+impl TileDrawable for BuildingKind {
+    fn tile_sprite(&self, player_side: PlayerSide) -> TileSprite {
+        building_tiles!(self, player_side;
+            Reactor => (ReactorRed, ReactorBlue),
+            Miner   => (MinerRed, MinerBlue),
+        )
+    }
 }
 
 pub struct Assets {
