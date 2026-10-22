@@ -16,7 +16,7 @@ trait GamepadRead {
 }
 impl GamepadRead for Direction {
     fn from_gamepad(gamepad: &Gamepad) -> Option<Direction> {
-        if gamepad.down(Button::Up) {
+        if gamepad.pressed(Button::Up) {
             Some(Direction::Up)
         } else if gamepad.pressed(Button::Right) {
             Some(Direction::Right)
