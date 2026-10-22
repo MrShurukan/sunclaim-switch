@@ -218,10 +218,10 @@ fn draw_field(session: &Session, assets: &Assets, frame: &mut Frame) {
     // Grid
     for i in 0..=TILES_ARRAY_X_DIM {
         vertical_line(frame, x_to_screen_coordinates(i));
+    }
 
-        for j in 0..=TILES_ARRAY_Y_DIM {
-            horizontal_line(frame, y_to_screen_coordinates(j));
-        }
+    for j in 0..=TILES_ARRAY_Y_DIM {
+        horizontal_line(frame, y_to_screen_coordinates(j));
     }
 
     // Buildings
