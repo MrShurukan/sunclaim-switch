@@ -1,0 +1,5 @@
+
+[language-server.rust-analyzer.config.check]
+command = "clippy"
+extraArgs = ["--", "-W", "clippy::pedantic"]
+ignore = ["dead_code", "unused_variables"]
