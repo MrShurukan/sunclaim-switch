@@ -5,7 +5,9 @@ use alloc::vec::Vec;
 use core::ffi::CStr;
 use core::str::FromStr;
 use serde::Deserialize;
-use AsepriteSheetError::*;
+use AsepriteSheetError::{
+    DuplicateSliceName, MissingEnumVariant, MultipleFramesAreUnsupported, UnknownSliceNameInJson,
+};
 
 pub trait AsepriteSheetKey: Copy + FromStr + Ord + strum::IntoEnumIterator {}
 
@@ -13,10 +15,10 @@ pub trait AsepriteSheetKey: Copy + FromStr + Ord + strum::IntoEnumIterator {}
 /// (only supports Aseprite). Struct helps easily draw parts of the image by the key, defined
 /// with Shift + C (Slice Tool).
 ///
-/// [K] has to be an enum. It has to implement [FromStr], because your Aseprite slice names will be used
-/// to construct it. It is recommended to use [strum::EnumString] to implement [FromStr] for you.
+/// [K] has to be an enum. It has to implement [`FromStr`], because your Aseprite slice names will be used
+/// to construct it. It is recommended to use [`strum::EnumString`] to implement [`FromStr`] for you.
 ///
-/// [K] also has to implement [Ord] for internal storage and [strum::IntoEnumIterator] for verifying
+/// [K] also has to implement [Ord] for internal storage and [`strum::IntoEnumIterator`] for verifying
 /// that all keys are covered inside json
 pub struct AsepriteSheet<K: AsepriteSheetKey> {
     texture: Texture,
@@ -104,6 +106,7 @@ impl<K: AsepriteSheetKey> AsepriteSheet<K> {
     pub fn draw_tint(&self, frame: &mut Frame, key: K, location: Vec2, tint_color: Color) -> Vec2 {
         let source = self.sections.get(&key).expect("validated in constructor");
 
+        #[allow(clippy::cast_precision_loss)]
         let dest = (
             location.x,
             location.y,

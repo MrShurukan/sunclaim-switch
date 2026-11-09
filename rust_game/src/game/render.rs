@@ -294,7 +294,7 @@ fn side_panel_preview_text(frame: &mut Frame<'_>, preview_text: &str) {
             .into(),
         16,
         Color::WHITE,
-    )
+    );
 }
 
 const BOTTOM_BAR_START_Y: usize = TOP_BAR_HEIGHT + FIELD_HEIGHT;
@@ -308,14 +308,14 @@ fn draw_bottom_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
 
     // TODO: Display help based on the current UI state
     // TODO: Make it a streamlined experience showing predefined help from an array and calculating coords automatically
-    const Y: usize = BOTTOM_BAR_START_Y + 26;
+    let y: usize = BOTTOM_BAR_START_Y + 26;
 
     icon_with_text(
         frame,
         &assets.icons,
         Icon::DPad,
         "Cursor",
-        (15, Y).into(),
+        (15, y).into(),
         Color::WHITE,
     );
     icon_with_text(
@@ -323,7 +323,7 @@ fn draw_bottom_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
         &assets.icons,
         Icon::A,
         "Selection",
-        (144, Y).into(),
+        (144, y).into(),
         Color::WHITE,
     );
     icons_with_text(
@@ -331,7 +331,7 @@ fn draw_bottom_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
         &assets.icons,
         &[Icon::LButton, Icon::RButton],
         "Mode",
-        (297, Y).into(),
+        (297, y).into(),
         Color::WHITE,
     );
     icon_with_text(
@@ -339,7 +339,7 @@ fn draw_bottom_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
         &assets.icons,
         Icon::MinusButton,
         "Panel/Field",
-        (445, Y).into(),
+        (445, y).into(),
         Color::WHITE,
     );
     icon_with_text(
@@ -347,7 +347,7 @@ fn draw_bottom_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
         &assets.icons,
         Icon::Y,
         "Finish turn",
-        (615, Y).into(),
+        (615, y).into(),
         Color::WHITE,
     );
 }
@@ -428,6 +428,8 @@ fn draw_cursor(session: &Session, assets: &Assets, frame: &mut Frame) {
 
     let position = session.ui_state.cursor_pos;
 
+    #[allow(clippy::cast_sign_loss)]
+    #[allow(clippy::cast_possible_truncation)]
     let alpha = (255.0 * libm::powf(CURSOR_PULSER.pulse(session.elapsed_time), 0.4)) as u8;
     let tint = Color::rgba(255, 255, 255, alpha);
 
@@ -453,7 +455,7 @@ fn draw_error(error_info: &ErrorInfo, frame: &mut Frame) {
         (100, 400).into(),
         24,
         Color::BLUE,
-    )
+    );
 }
 
 fn icon_with_text<K: AsepriteSheetKey>(
