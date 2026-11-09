@@ -1,5 +1,4 @@
 use crate::panic_buffer::PanicBuffer;
-use crate::raylib::{App, Color};
 use core::fmt::Write;
 use core::{
     alloc::{GlobalAlloc, Layout},
@@ -18,10 +17,10 @@ unsafe impl GlobalAlloc for NewlibAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         let alignment = layout.align().max(core::mem::align_of::<usize>());
 
-        unsafe { memalign(alignment, layout.size()) as *mut u8 }
+        unsafe { memalign(alignment, layout.size()).cast::<u8>() }
     }
 
-    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+    unsafe fn dealloc(&self, ptr: *mut u8, _layout: Layout) {
         unsafe { free(ptr.cast()) }
     }
 }
@@ -30,7 +29,8 @@ unsafe impl GlobalAlloc for NewlibAllocator {
 static GLOBAL_ALLOCATOR: NewlibAllocator = NewlibAllocator;
 
 #[alloc_error_handler]
-fn allocation_error(layout: Layout) -> ! {
+#[allow(clippy::empty_loop)]
+fn allocation_error(_layout: Layout) -> ! {
     loop {}
 }
 

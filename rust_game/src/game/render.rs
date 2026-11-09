@@ -300,7 +300,7 @@ fn side_panel_preview_text(frame: &mut Frame<'_>, preview_text: &str) {
 const BOTTOM_BAR_START_Y: usize = TOP_BAR_HEIGHT + FIELD_HEIGHT;
 const BOTTOM_BAR_HEIGHT: usize = SCREEN_HEIGHT - BOTTOM_BAR_START_Y;
 
-fn draw_bottom_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
+fn draw_bottom_bar(_session: &Session, assets: &Assets, frame: &mut Frame) {
     frame.rect(
         (0, BOTTOM_BAR_START_Y, SCREEN_WIDTH, BOTTOM_BAR_HEIGHT).into(),
         BAR_COLOR,

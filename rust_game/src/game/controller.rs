@@ -3,8 +3,8 @@ use crate::game::render::UiState;
 use alloc::string::String;
 use game_core::world::{TurnPhase, World};
 
-/// Major divisions of the game state. Fitting additions would be something like MainMenu,
-/// Settings, GameOver, etc.
+/// Major divisions of the game state. Fitting additions would be something like `MainMenu`,
+/// `Settings`, `GameOver`, etc.
 #[derive(Debug)]
 pub enum GameState {
     Running,
@@ -39,7 +39,7 @@ impl Session {
 }
 
 /// Update (runs every frame)
-pub fn update(session: &mut Session, input: &GameInput, dt: f32) {
+pub fn update(session: &mut Session, input: GameInput, dt: f32) {
     session.elapsed_time += dt;
 
     match session.state {
@@ -50,13 +50,13 @@ pub fn update(session: &mut Session, input: &GameInput, dt: f32) {
     }
 }
 
-fn update_running(session: &mut Session, input: &GameInput, dt: f32) {
+fn update_running(session: &mut Session, input: GameInput, dt: f32) {
     match session.world.turn_phase() {
         TurnPhase::Plan => update_plan(session, input, dt),
     }
 }
 
-fn update_plan(session: &mut Session, input: &GameInput, dt: f32) {
+fn update_plan(session: &mut Session, input: GameInput, dt: f32) {
     // Cursor move
     session.ui_state.direction_held(input.direction_raw, dt);
 }

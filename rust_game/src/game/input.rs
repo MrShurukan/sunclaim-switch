@@ -11,15 +11,15 @@ pub struct GameInput {
 }
 
 trait GamepadRead {
-    fn from_gamepad(gamepad: &Gamepad) -> Option<Self>
+    fn from_gamepad(gamepad: Gamepad) -> Option<Self>
     where
         Self: Sized;
-    fn from_gamepad_raw(gamepad: &Gamepad) -> Option<Self>
+    fn from_gamepad_raw(gamepad: Gamepad) -> Option<Self>
     where
         Self: Sized;
 }
 impl GamepadRead for Direction {
-    fn from_gamepad(gamepad: &Gamepad) -> Option<Direction> {
+    fn from_gamepad(gamepad: Gamepad) -> Option<Direction> {
         if gamepad.pressed(Button::Up) {
             Some(Direction::Up)
         } else if gamepad.pressed(Button::Right) {
@@ -33,7 +33,7 @@ impl GamepadRead for Direction {
         }
     }
 
-    fn from_gamepad_raw(gamepad: &Gamepad) -> Option<Direction> {
+    fn from_gamepad_raw(gamepad: Gamepad) -> Option<Direction> {
         if gamepad.down(Button::Up) {
             Some(Direction::Up)
         } else if gamepad.down(Button::Right) {
@@ -49,7 +49,7 @@ impl GamepadRead for Direction {
 }
 
 impl GameInput {
-    pub fn read(gamepad: &Gamepad) -> Self {
+    pub fn read(gamepad: Gamepad) -> Self {
         Self {
             reset: (gamepad.pressed(Button::Minus) && gamepad.down(Button::ZL))
                 || (gamepad.pressed(Button::ZL) && gamepad.down(Button::Minus)),

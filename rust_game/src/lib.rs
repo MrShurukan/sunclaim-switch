@@ -28,7 +28,7 @@ pub extern "C" fn rust_main() -> c_int {
 
     let mut game = match Game::new() {
         Ok(game) => game,
-        Err(e) => game_construction_error_loop(app, e),
+        Err(e) => game_construction_error_loop(app, &e),
     };
 
     let gamepad = Gamepad::new();
@@ -36,8 +36,8 @@ pub extern "C" fn rust_main() -> c_int {
     while app.running() {
         let dt = app.delta_time();
 
-        let input = GameInput::read(&gamepad);
-        game.update(&input, dt);
+        let input = GameInput::read(gamepad);
+        game.update(input, dt);
 
         let mut frame = app.begin_frame(Color::rgb(10, 10, 10));
         game.draw(&mut frame);
@@ -51,8 +51,8 @@ pub extern "C" fn rust_main() -> c_int {
     0
 }
 
-fn game_construction_error_loop(mut app: App, err: GameError) -> ! {
-    let c_string = CString::new(format!("{}", err)).expect("CString::new failed");
+fn game_construction_error_loop(mut app: App, err: &GameError) -> ! {
+    let c_string = CString::new(format!("{err}")).expect("CString::new failed");
     let error_text = c_string.as_c_str();
 
     loop {

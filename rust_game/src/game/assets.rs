@@ -84,7 +84,7 @@ pub struct Assets {
 pub enum AssetError {
     Texture(TextureError),
     /// Will hold a debug string about the underlying error.
-    /// Kind of a hack, cause [AsepriteSheetError] has a generic type
+    /// Kind of a hack, cause [`AsepriteSheetError`] has a generic type
     AsepriteSheet(String),
 }
 

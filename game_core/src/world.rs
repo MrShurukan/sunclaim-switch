@@ -9,7 +9,7 @@ use alloc::vec::Vec;
 
 pub type TileArray = [Tile; TILES_ARRAY_SIZE];
 
-/// Platform-independent game data and rules. Rendering and input live in rust_game.
+/// Platform-independent game data and rules. Rendering and input live in `rust_game`.
 pub struct World {
     tiles: TileArray,
 
@@ -50,30 +50,37 @@ impl Default for World {
 }
 
 impl World {
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    #[must_use]
     pub const fn round_number(&self) -> u32 {
         self.round_number
     }
 
+    #[must_use]
     pub const fn active_player_side(&self) -> PlayerSide {
         self.active_player
     }
 
+    #[must_use]
     pub const fn active_player(&self) -> &Player {
         &self.players[self.active_player.index()]
     }
 
+    #[must_use]
     pub const fn turn_phase(&self) -> &TurnPhase {
         &self.turn_phase
     }
 
+    #[must_use]
     pub fn buildings(&self) -> &[Building] {
         &self.buildings
     }
 
+    #[must_use]
     pub fn locate_building(&self, pos: TilePos) -> Option<&Building> {
         self.buildings.iter().find(|b| b.position() == pos)
     }

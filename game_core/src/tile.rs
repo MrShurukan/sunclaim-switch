@@ -10,10 +10,12 @@ pub struct Tile {
 }
 
 impl Tile {
+    #[must_use]
     pub const fn new(tile_pos: TilePos) -> Self {
         Self { tile_pos }
     }
 
+    #[must_use]
     pub const fn tile_pos(&self) -> TilePos {
         self.tile_pos
     }
@@ -32,6 +34,11 @@ pub enum TilePosError {
 }
 
 impl TilePos {
+    /// Creates a new tile pos, ensuring it stays within bounds
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if either X or Y are out of bounds of the tile array (with a corresponding error).
     pub const fn new(x: usize, y: usize) -> Result<Self, TilePosError> {
         if x >= TILES_ARRAY_X_DIM {
             return Err(TilePosError::OutOfBoundsX);
@@ -44,6 +51,11 @@ impl TilePos {
         Ok(Self { x, y })
     }
 
+    /// Attempts to create a new [`TilePos`] shifted to a specified direction
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the new position lands out of bounds of the tile array.
     pub fn translate(self, direction: Direction) -> Result<Self, TilePosError> {
         let (new_x, new_y) = match direction {
             Direction::Up => (
@@ -67,9 +79,11 @@ impl TilePos {
         Self::new(new_x, new_y)
     }
 
+    #[must_use]
     pub const fn x(self) -> usize {
         self.x
     }
+    #[must_use]
     pub const fn y(self) -> usize {
         self.y
     }

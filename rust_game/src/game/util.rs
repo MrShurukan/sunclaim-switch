@@ -4,7 +4,7 @@ use libm::sinf;
 /// Helper struct to modulate a value using a sine wave.
 /// from and to specify bounds, while period specifies how often it should pulse in seconds
 ///
-/// See [SinePulser::new]
+/// See [`SinePulser::new`]
 pub struct SinePulser {
     frequency_rad: f32,
     half_diff: f32,

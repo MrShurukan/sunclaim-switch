@@ -1,3 +1,5 @@
+#![allow(clippy::cast_precision_loss)]
+#![allow(clippy::unused_self)]
 mod sys;
 
 use alloc::ffi::CString;
@@ -178,6 +180,9 @@ pub const fn lerp(from: f32, to: f32, t: f32) -> f32 {
     from * (1.0 - t) + to * t
 }
 
+/// Warning, may lead to a sign loss and to value truncation
+#[allow(clippy::cast_sign_loss)]
+#[allow(clippy::cast_possible_truncation)]
 pub const fn lerp_u8(from: u8, to: u8, t: f32) -> u8 {
     lerp(from as f32, to as f32, t) as u8
 }
@@ -210,7 +215,7 @@ impl Color {
     }
 
     /// Tints the color by a percentage (0 -> 1),
-    /// where 0 is base color and 1 means fully tint_color.
+    /// where 0 is base color and 1 means fully `tint_color`.
     /// Doesn't affect alpha
     ///
     /// Also is not a real tint per se, but works good enough
@@ -319,12 +324,12 @@ impl TextFile {
             return Err(TextFileError::LoadFailed);
         }
 
-        let data_str = unsafe { CStr::from_ptr(data_ptr) };
-        let data_str = data_str.to_str()?.into();
+        let data_string_slice = unsafe { CStr::from_ptr(data_ptr) };
+        let data_string = data_string_slice.to_str()?.into();
 
         Ok(TextFile {
             data: data_ptr,
-            data_str,
+            data_str: data_string,
         })
     }
 
@@ -454,6 +459,8 @@ impl App {
         let c_str = CString::new(title).unwrap();
 
         unsafe {
+            #[allow(clippy::cast_possible_truncation)]
+            #[allow(clippy::cast_possible_wrap)]
             sys::InitWindow(width as c_int, height as c_int, c_str.as_ptr());
         }
 
@@ -527,7 +534,7 @@ impl Frame<'_> {
         }
     }
 
-    /// This is different from plain DrawRectanglePro call, because origin is set via
+    /// This is different from plain `DrawRectanglePro` call, because origin is set via
     /// applying relative coordinates (i.e. 0 -> 1), instead of raw pixel values
     pub fn rect_rotation(&mut self, rect: Rect, origin: Vec2, rotation: f32, color: Color) {
         let origin = Vec2::new(origin.x * rect.width, origin.y * rect.height);
@@ -542,7 +549,6 @@ impl Frame<'_> {
     }
 
     /// Convenient version.
-    ///
     /// Allocates a temporary NUL-terminated buffer.
     pub fn text(&mut self, text: &str, position: Vec2, size: i32, color: Color) {
         let c_str = CString::new(text).unwrap();
@@ -551,6 +557,7 @@ impl Frame<'_> {
     }
 
     /// Allocation-free version for persistent/static text.
+    #[allow(clippy::cast_possible_truncation)]
     pub fn const_text(&mut self, text: &CStr, position: Vec2, size: i32, color: Color) {
         unsafe {
             sys::DrawText(
@@ -594,6 +601,8 @@ impl Frame<'_> {
         );
     }
 
+    #[allow(clippy::cast_possible_wrap)]
+    #[allow(clippy::cast_possible_truncation)]
     pub fn const_text_right_align(
         &mut self,
         text: &CStr,
@@ -603,10 +612,9 @@ impl Frame<'_> {
         y: i32,
         color: Color,
     ) {
-        let x =
-            right_align_border as i32 - self.measure_const_text(&text, size) - horizontal_offset;
+        let x = right_align_border as i32 - self.measure_const_text(text, size) - horizontal_offset;
 
-        self.const_text(&text, (x, y).into(), size, color)
+        self.const_text(text, (x, y).into(), size, color);
     }
 
     pub fn texture(&mut self, texture: &Texture, position: Vec2) {

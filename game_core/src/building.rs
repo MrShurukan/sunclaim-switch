@@ -26,6 +26,7 @@ pub const MINER_RED_START: TilePos = unwrap_const!(TilePos::new(3, 7));
 pub const MINER_BLUE_START: TilePos = unwrap_const!(TilePos::new(20, 7));
 
 impl Building {
+    #[must_use]
     pub fn new(owner: PlayerSide, position: TilePos, kind: BuildingKind) -> Self {
         Self {
             id: BuildingId::next(),
@@ -36,22 +37,27 @@ impl Building {
         }
     }
 
+    #[must_use]
     pub const fn id(&self) -> BuildingId {
         self.id
     }
 
+    #[must_use]
     pub const fn owner(&self) -> PlayerSide {
         self.owner
     }
 
+    #[must_use]
     pub const fn position(&self) -> TilePos {
         self.position
     }
 
+    #[must_use]
     pub const fn hp(&self) -> u32 {
         self.hp
     }
 
+    #[must_use]
     pub const fn kind(&self) -> BuildingKind {
         self.kind
     }
@@ -64,6 +70,7 @@ pub enum BuildingKind {
 }
 
 impl BuildingKind {
+    #[must_use]
     pub const fn start_hp(self) -> u32 {
         match self {
             BuildingKind::Reactor => 100,
@@ -71,6 +78,7 @@ impl BuildingKind {
         }
     }
 
+    #[must_use]
     pub fn name(self) -> &'static str {
         match self {
             BuildingKind::Reactor => "Reactor",
@@ -78,13 +86,14 @@ impl BuildingKind {
         }
     }
 
+    #[must_use]
     pub fn metal_per_turn(self) -> u8 {
         match self {
-            BuildingKind::Reactor => 4,
-            BuildingKind::Miner => 4,
+            BuildingKind::Reactor | BuildingKind::Miner => 4,
         }
     }
 
+    #[must_use]
     pub fn energy_per_turn(self) -> u8 {
         match self {
             BuildingKind::Reactor => 12,

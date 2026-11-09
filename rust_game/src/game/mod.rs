@@ -36,7 +36,7 @@ impl Game {
         self.session = Session::new();
     }
 
-    pub fn update(&mut self, input: &GameInput, dt: f32) {
+    pub fn update(&mut self, input: GameInput, dt: f32) {
         if input.reset {
             self.reset();
             return;
