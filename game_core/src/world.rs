@@ -1,4 +1,7 @@
-use crate::building::{Building, BuildingKind, MINER_BLUE_START, MINER_RED_START, REACTOR_BLUE_START, REACTOR_RED_START};
+use crate::building::{
+    Building, BuildingKind, MINER_BLUE_START, MINER_RED_START, REACTOR_BLUE_START,
+    REACTOR_RED_START,
+};
 use crate::player::{Player, PlayerSide};
 use crate::tile::{Tile, TilePos, TILES_ARRAY_SIZE, TILES_ARRAY_X_DIM};
 use alloc::vec;
@@ -14,7 +17,7 @@ pub struct World {
     active_player: PlayerSide,
     turn_phase: TurnPhase,
     players: [Player; 2],
-    buildings: Vec<Building>
+    buildings: Vec<Building>,
 }
 
 #[derive(Debug)]
@@ -22,8 +25,8 @@ pub enum TurnPhase {
     Plan,
 }
 
-impl World {
-    pub fn new() -> Self {
+impl Default for World {
+    fn default() -> Self {
         Self {
             tiles: core::array::from_fn(|index| {
                 let x = index % TILES_ARRAY_X_DIM;
@@ -37,12 +40,18 @@ impl World {
             turn_phase: TurnPhase::Plan,
             players: [Player::new(PlayerSide::Red), Player::new(PlayerSide::Blue)],
             buildings: vec![
-                Building::new(PlayerSide::Red,  REACTOR_RED_START,  BuildingKind::Reactor),
-                Building::new(PlayerSide::Red,  MINER_RED_START,    BuildingKind::Miner),
+                Building::new(PlayerSide::Red, REACTOR_RED_START, BuildingKind::Reactor),
+                Building::new(PlayerSide::Red, MINER_RED_START, BuildingKind::Miner),
                 Building::new(PlayerSide::Blue, REACTOR_BLUE_START, BuildingKind::Reactor),
-                Building::new(PlayerSide::Blue, MINER_BLUE_START,   BuildingKind::Miner),
-            ]
+                Building::new(PlayerSide::Blue, MINER_BLUE_START, BuildingKind::Miner),
+            ],
         }
+    }
+}
+
+impl World {
+    pub fn new() -> Self {
+        Self::default()
     }
 
     pub const fn round_number(&self) -> u32 {
@@ -63,5 +72,9 @@ impl World {
 
     pub fn buildings(&self) -> &[Building] {
         &self.buildings
+    }
+
+    pub fn locate_building(&self, pos: TilePos) -> Option<&Building> {
+        self.buildings.iter().find(|b| b.position() == pos)
     }
 }

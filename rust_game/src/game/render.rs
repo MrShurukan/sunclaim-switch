@@ -12,7 +12,7 @@ use game_core::tile::{TilePos, TilePosError, TILES_ARRAY_X_DIM, TILES_ARRAY_Y_DI
 #[derive(Debug, Copy, Clone)]
 pub enum PanelState {
     Minimized,
-    Expanded
+    Expanded,
 }
 
 #[derive(Debug)]
@@ -50,7 +50,7 @@ impl DirectionHoldInfo {
 #[derive(Debug, Copy, Clone, derive_more::From)]
 pub enum CursorMoveError {
     InvalidCursorPosition(TilePosError),
-    PanelIsOpen
+    PanelIsOpen,
 }
 
 impl UiState {
@@ -72,6 +72,7 @@ impl UiState {
         Ok(())
     }
 
+    // TODO: Move this out of render to something like ui_controller
     pub fn direction_held(&mut self, dir: Option<Direction>, dt: f32) {
         // Button released
         if dir.is_none() {
@@ -138,10 +139,14 @@ fn draw_top_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
     frame.rect((0, 0, SCREEN_WIDTH, TOP_BAR_HEIGHT).into(), BAR_COLOR);
 
     frame.text(
-        &format!("Round {} - {}'s turn", session.world.round_number(), session.world.active_player_side().name()),
+        &format!(
+            "Round {} - {}'s turn",
+            session.world.round_number(),
+            session.world.active_player_side().name()
+        ),
         (15, 21).into(),
         20,
-        Color::WHITE
+        Color::WHITE,
     );
 
     icon_with_text(
@@ -150,7 +155,7 @@ fn draw_top_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
         Icon::Metal,
         &format!("{} -> {}", session.world.active_player().metal(), 0),
         (680, 14).into(),
-        Color::WHITE
+        Color::WHITE,
     );
 
     icon_with_text(
@@ -159,7 +164,7 @@ fn draw_top_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
         Icon::Energy,
         &format!("{} -> {}", session.world.active_player().energy(), 0),
         (886, 14).into(),
-        Color::WHITE
+        Color::WHITE,
     );
 
     icon_with_text(
@@ -168,7 +173,7 @@ fn draw_top_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
         Icon::Action,
         "0/4 assigned",
         (1092, 14).into(),
-        Color::WHITE
+        Color::WHITE,
     );
 }
 
@@ -177,34 +182,174 @@ const SIDE_PANEL_START_Y: usize = TOP_BAR_HEIGHT;
 const SIDE_PANEL_HEIGHT: usize = BOTTOM_BAR_START_Y - SIDE_PANEL_START_Y;
 const SIDE_PANEL_WIDTH: usize = SCREEN_WIDTH - SIDE_PANEL_START_X;
 
+// Collapsed panel
+// TODO: Store these values in a better way
+const SIDE_PANEL_ICON_START_X: usize = SIDE_PANEL_START_X + 5;
+const SIDE_PANEL_ICON_START_Y: usize = SIDE_PANEL_START_Y + 6;
+const SIDE_PANEL_ICON_SIZE: usize = TILE_SIZE;
+
 const SIDE_PANEL_COLOR: Color = Color::rgb(12, 29, 51);
 
 fn draw_side_panel(session: &Session, assets: &Assets, frame: &mut Frame) {
     // TODO: Expanded panel
     frame.rect(
-        (SIDE_PANEL_START_X, SIDE_PANEL_START_Y, SIDE_PANEL_WIDTH, SIDE_PANEL_HEIGHT).into(),
-        SIDE_PANEL_COLOR
+        (
+            SIDE_PANEL_START_X,
+            SIDE_PANEL_START_Y,
+            SIDE_PANEL_WIDTH,
+            SIDE_PANEL_HEIGHT,
+        )
+            .into(),
+        SIDE_PANEL_COLOR,
     );
 
-    // TODO: Sidepanel info
+    // Preview icon
+    frame.rect(
+        (
+            SIDE_PANEL_ICON_START_X,
+            SIDE_PANEL_ICON_START_Y,
+            SIDE_PANEL_ICON_SIZE,
+            SIDE_PANEL_ICON_SIZE,
+        )
+            .into(),
+        Color::WHITE,
+    );
+
+    let cursor_pos = session.ui_state.cursor_pos;
+    if let Some(building) = session.world.locate_building(cursor_pos) {
+        let sprite = building.kind().tile_sprite(building.owner());
+        assets.tiles.draw(
+            frame,
+            sprite,
+            (SIDE_PANEL_ICON_START_X, SIDE_PANEL_ICON_START_Y).into(),
+        );
+
+        // Preview text
+        side_panel_preview_text(frame, building.kind().name());
+
+        // TODO: Remove these magic numbers in the position
+        // Building stats
+        // Health
+        frame.text(
+            &format!("{}/{} HP", building.hp(), building.kind().start_hp()),
+            (
+                SIDE_PANEL_ICON_START_X + 5,
+                SIDE_PANEL_ICON_START_Y + SIDE_PANEL_ICON_SIZE + 23,
+            )
+                .into(),
+            16,
+            Color::WHITE,
+        );
+
+        // Resources per turn
+        frame.const_text(
+            c"Per turn:",
+            (
+                SIDE_PANEL_ICON_START_X + 5,
+                SIDE_PANEL_ICON_START_Y + SIDE_PANEL_ICON_SIZE + 50,
+            )
+                .into(),
+            16,
+            Color::WHITE,
+        );
+
+        icon_with_text(
+            frame,
+            &assets.icons,
+            Icon::Metal,
+            &format!("+{}", building.kind().metal_per_turn()),
+            (
+                SIDE_PANEL_ICON_START_X + 5,
+                SIDE_PANEL_ICON_START_Y + SIDE_PANEL_ICON_SIZE + 78,
+            )
+                .into(),
+            Color::WHITE,
+        );
+
+        icon_with_text(
+            frame,
+            &assets.icons,
+            Icon::Energy,
+            &format!("+{}", building.kind().energy_per_turn()),
+            (
+                SIDE_PANEL_ICON_START_X + 5,
+                SIDE_PANEL_ICON_START_Y + SIDE_PANEL_ICON_SIZE + 110,
+            )
+                .into(),
+            Color::WHITE,
+        );
+    } else {
+        // Empty preview text
+        side_panel_preview_text(frame, "Empty");
+    }
+}
+
+fn side_panel_preview_text(frame: &mut Frame<'_>, preview_text: &str) {
+    frame.text(
+        preview_text,
+        (
+            SIDE_PANEL_ICON_START_X + SIDE_PANEL_ICON_SIZE + 5,
+            SIDE_PANEL_ICON_START_Y + 20,
+        )
+            .into(),
+        16,
+        Color::WHITE,
+    )
 }
 
 const BOTTOM_BAR_START_Y: usize = TOP_BAR_HEIGHT + FIELD_HEIGHT;
 const BOTTOM_BAR_HEIGHT: usize = SCREEN_HEIGHT - BOTTOM_BAR_START_Y;
 
 fn draw_bottom_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
-    frame.rect((0, BOTTOM_BAR_START_Y, SCREEN_WIDTH, BOTTOM_BAR_HEIGHT).into(), BAR_COLOR);
+    frame.rect(
+        (0, BOTTOM_BAR_START_Y, SCREEN_WIDTH, BOTTOM_BAR_HEIGHT).into(),
+        BAR_COLOR,
+    );
 
     // TODO: Display help based on the current UI state
     // TODO: Make it a streamlined experience showing predefined help from an array and calculating coords automatically
     const Y: usize = BOTTOM_BAR_START_Y + 26;
 
-    icon_with_text(frame, &assets.icons, Icon::DPad, "Cursor", (15, Y).into(), Color::WHITE);
-    icon_with_text(frame, &assets.icons, Icon::A, "Selection", (144, Y).into(), Color::WHITE);
-    icons_with_text(frame, &assets.icons,
-                    &[Icon::LButton, Icon::RButton], "Mode", (297, Y).into(), Color::WHITE);
-    icon_with_text(frame, &assets.icons, Icon::MinusButton, "Panel/Field", (445, Y).into(), Color::WHITE);
-    icon_with_text(frame, &assets.icons, Icon::Y, "Finish turn", (615, Y).into(), Color::WHITE);
+    icon_with_text(
+        frame,
+        &assets.icons,
+        Icon::DPad,
+        "Cursor",
+        (15, Y).into(),
+        Color::WHITE,
+    );
+    icon_with_text(
+        frame,
+        &assets.icons,
+        Icon::A,
+        "Selection",
+        (144, Y).into(),
+        Color::WHITE,
+    );
+    icons_with_text(
+        frame,
+        &assets.icons,
+        &[Icon::LButton, Icon::RButton],
+        "Mode",
+        (297, Y).into(),
+        Color::WHITE,
+    );
+    icon_with_text(
+        frame,
+        &assets.icons,
+        Icon::MinusButton,
+        "Panel/Field",
+        (445, Y).into(),
+        Color::WHITE,
+    );
+    icon_with_text(
+        frame,
+        &assets.icons,
+        Icon::Y,
+        "Finish turn",
+        (615, Y).into(),
+        Color::WHITE,
+    );
 }
 
 const TILE_SIZE: usize = 48;
@@ -213,7 +358,10 @@ const FIELD_WIDTH: usize = TILE_SIZE * TILES_ARRAY_X_DIM;
 const FIELD_HEIGHT: usize = TILE_SIZE * TILES_ARRAY_Y_DIM;
 
 fn draw_field(session: &Session, assets: &Assets, frame: &mut Frame) {
-    frame.rect((0, 60, FIELD_WIDTH, FIELD_HEIGHT).into(), Color::rgb(194, 137, 81));
+    frame.rect(
+        (0, 60, FIELD_WIDTH, FIELD_HEIGHT).into(),
+        Color::rgb(194, 137, 81),
+    );
 
     // Grid
     for i in 0..=TILES_ARRAY_X_DIM {
@@ -228,13 +376,21 @@ fn draw_field(session: &Session, assets: &Assets, frame: &mut Frame) {
     for building in session.world.buildings() {
         let screen_pos = to_screen_coordinates(building.position());
 
-        assets.tiles.draw(frame, building.kind().tile_sprite(building.owner()), screen_pos);
+        assets.tiles.draw(
+            frame,
+            building.kind().tile_sprite(building.owner()),
+            screen_pos,
+        );
     }
 }
 
 #[inline]
 fn to_screen_coordinates(pos: TilePos) -> Vec2 {
-    (x_to_screen_coordinates(pos.x()), y_to_screen_coordinates(pos.y())).into()
+    (
+        x_to_screen_coordinates(pos.x()),
+        y_to_screen_coordinates(pos.y()),
+    )
+        .into()
 }
 
 #[inline]
@@ -249,7 +405,12 @@ fn y_to_screen_coordinates(y: usize) -> usize {
 
 #[inline]
 fn vertical_line(frame: &mut Frame, x: usize) {
-    frame.line((x, FIELD_Y_START).into(), (x, FIELD_HEIGHT + TOP_BAR_HEIGHT).into(), 1., Color::WHITE);
+    frame.line(
+        (x, FIELD_Y_START).into(),
+        (x, FIELD_HEIGHT + TOP_BAR_HEIGHT).into(),
+        1.,
+        Color::WHITE,
+    );
 }
 
 #[inline]
@@ -273,8 +434,12 @@ fn draw_cursor(session: &Session, assets: &Assets, frame: &mut Frame) {
     assets.tiles.draw_tint(
         frame,
         cursor_tile,
-        (position.x() * TILE_SIZE, FIELD_Y_START + position.y() * TILE_SIZE).into(),
-        tint
+        (
+            position.x() * TILE_SIZE,
+            FIELD_Y_START + position.y() * TILE_SIZE,
+        )
+            .into(),
+        tint,
     );
 }
 
@@ -283,7 +448,12 @@ fn draw_error(error_info: &ErrorInfo, frame: &mut Frame) {
     frame.text(&error_info.message, (100, 100).into(), 32, Color::WHITE);
     frame.text(&error_info.origination, (100, 150).into(), 24, Color::WHITE);
 
-    frame.const_text(c"Press ZL + Minus to reset.", (100, 400).into(), 24, Color::BLUE)
+    frame.const_text(
+        c"Press ZL + Minus to reset.",
+        (100, 400).into(),
+        24,
+        Color::BLUE,
+    )
 }
 
 fn icon_with_text<K: AsepriteSheetKey>(
@@ -292,7 +462,7 @@ fn icon_with_text<K: AsepriteSheetKey>(
     icon_key: K,
     text: &str,
     position: Vec2,
-    color: Color
+    color: Color,
 ) {
     let icon_size = sheet.draw(frame, icon_key, position);
 
@@ -306,7 +476,7 @@ fn icons_with_text<K: AsepriteSheetKey>(
     icon_keys: &[K],
     text: &str,
     mut position: Vec2,
-    color: Color
+    color: Color,
 ) {
     for key in icon_keys {
         let icon_size = sheet.draw(frame, *key, position);

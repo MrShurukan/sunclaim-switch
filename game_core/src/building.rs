@@ -2,7 +2,7 @@ use crate::player::PlayerSide;
 use crate::tile::TilePos;
 use core::sync::atomic::{AtomicU32, Ordering};
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Building {
     id: BuildingId,
     owner: PlayerSide,
@@ -15,7 +15,7 @@ macro_rules! unwrap_const {
     ($opt:expr) => {
         match $opt {
             Ok(x) => x,
-            Err(_) => unreachable!()
+            Err(_) => unreachable!(),
         }
     };
 }
@@ -60,18 +60,40 @@ impl Building {
 #[derive(Debug, Copy, Clone)]
 pub enum BuildingKind {
     Reactor,
-    Miner
+    Miner,
 }
 
 impl BuildingKind {
     pub const fn start_hp(self) -> u32 {
         match self {
             BuildingKind::Reactor => 100,
-            BuildingKind::Miner => 35
+            BuildingKind::Miner => 35,
+        }
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            BuildingKind::Reactor => "Reactor",
+            BuildingKind::Miner => "Miner",
+        }
+    }
+
+    pub fn metal_per_turn(self) -> u8 {
+        match self {
+            BuildingKind::Reactor => 4,
+            BuildingKind::Miner => 4,
+        }
+    }
+
+    pub fn energy_per_turn(self) -> u8 {
+        match self {
+            BuildingKind::Reactor => 12,
+            BuildingKind::Miner => 0,
         }
     }
 }
 
+// TODO: Attach to the world so each new world starts with fresh ids
 static LAST_BUILDING_ID: AtomicU32 = AtomicU32::new(0);
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct BuildingId(u32);
