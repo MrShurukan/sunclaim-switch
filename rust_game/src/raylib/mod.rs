@@ -7,18 +7,8 @@ use core::str::Utf8Error;
 use core::{
     ffi::{c_int, CStr},
     marker::PhantomData,
-    ops::{
-        Add,
-        AddAssign,
-        Mul,
-        MulAssign,
-        Sub,
-        SubAssign,
-    },
-    sync::atomic::{
-        AtomicBool,
-        Ordering,
-    },
+    ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign},
+    sync::atomic::{AtomicBool, Ordering},
 };
 // ============================================================
 // Math
@@ -46,9 +36,7 @@ impl Vec2 {
     }
 
     pub fn deadzone(self, radius: f32) -> Self {
-        let length_squared =
-            self.x * self.x +
-                self.y * self.y;
+        let length_squared = self.x * self.x + self.y * self.y;
 
         if length_squared < radius * radius {
             Self::ZERO
@@ -58,7 +46,10 @@ impl Vec2 {
     }
 
     pub fn translate(self, dx: f32, dy: f32) -> Self {
-        Self { x: self.x + dx, y: self.y + dy }
+        Self {
+            x: self.x + dx,
+            y: self.y + dy,
+        }
     }
 }
 
@@ -66,10 +57,7 @@ impl Add for Vec2 {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self {
-        Self::new(
-            self.x + rhs.x,
-            self.y + rhs.y,
-        )
+        Self::new(self.x + rhs.x, self.y + rhs.y)
     }
 }
 
@@ -84,10 +72,7 @@ impl Sub for Vec2 {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self {
-        Self::new(
-            self.x - rhs.x,
-            self.y - rhs.y,
-        )
+        Self::new(self.x - rhs.x, self.y - rhs.y)
     }
 }
 
@@ -102,10 +87,7 @@ impl Mul<f32> for Vec2 {
     type Output = Self;
 
     fn mul(self, rhs: f32) -> Self {
-        Self::new(
-            self.x * rhs,
-            self.y * rhs,
-        )
+        Self::new(self.x * rhs, self.y * rhs)
     }
 }
 
@@ -134,7 +116,6 @@ impl MulAssign<f32> for Vec2 {
     }
 }
 
-
 // ============================================================
 // Rectangle
 // ============================================================
@@ -149,12 +130,7 @@ pub struct Rect {
 }
 
 impl Rect {
-    pub const fn new(
-        x: f32,
-        y: f32,
-        width: f32,
-        height: f32,
-    ) -> Self {
+    pub const fn new(x: f32, y: f32, width: f32, height: f32) -> Self {
         Self {
             x,
             y,
@@ -163,12 +139,7 @@ impl Rect {
         }
     }
 
-    pub const fn new_usize(
-        x: usize,
-        y: usize,
-        width: usize,
-        height: usize,
-    ) -> Self {
+    pub const fn new_usize(x: usize, y: usize, width: usize, height: usize) -> Self {
         Self {
             x: x as f32,
             y: y as f32,
@@ -189,7 +160,6 @@ impl From<(usize, usize, usize, usize)> for Rect {
         Rect::new_usize(value.0, value.1, value.2, value.3)
     }
 }
-
 
 // ============================================================
 // Color
@@ -217,17 +187,17 @@ impl Color {
         Self::rgba(r, g, b, 255)
     }
 
-    pub const fn rgba(
-        r: u8,
-        g: u8,
-        b: u8,
-        a: u8,
-    ) -> Self {
+    pub const fn rgba(r: u8, g: u8, b: u8, a: u8) -> Self {
         Self { r, g, b, a }
     }
 
     pub const fn with_alpha(self, a: u8) -> Self {
-        Self { r: self.r, g: self.g, b: self.b, a}
+        Self {
+            r: self.r,
+            g: self.g,
+            b: self.b,
+            a,
+        }
     }
 
     pub const fn darken(self, amount: u8) -> Self {
@@ -235,7 +205,7 @@ impl Color {
             r: self.r.saturating_sub(amount),
             g: self.g.saturating_sub(amount),
             b: self.b.saturating_sub(amount),
-            a: self.a
+            a: self.a,
         }
     }
 
@@ -253,33 +223,26 @@ impl Color {
             r: lerp_u8(self.r, tint_color.r, amount),
             g: lerp_u8(self.g, tint_color.g, amount),
             b: lerp_u8(self.b, tint_color.b, amount),
-            a: self.a
+            a: self.a,
         }
     }
 
     pub const WHITE: Self = Self::rgb(255, 255, 255);
     pub const BLACK: Self = Self::rgb(0, 0, 0);
 
-    pub const RED: Self =
-        Self::rgb(230, 41, 55);
+    pub const RED: Self = Self::rgb(230, 41, 55);
 
-    pub const GREEN: Self =
-        Self::rgb(0, 228, 48);
+    pub const GREEN: Self = Self::rgb(0, 228, 48);
 
-    pub const BLUE: Self =
-        Self::rgb(0, 121, 241);
+    pub const BLUE: Self = Self::rgb(0, 121, 241);
 
-    pub const YELLOW: Self =
-        Self::rgb(253, 249, 0);
+    pub const YELLOW: Self = Self::rgb(253, 249, 0);
 
-    pub const SKY_BLUE: Self =
-        Self::rgb(102, 191, 255);
+    pub const SKY_BLUE: Self = Self::rgb(102, 191, 255);
 
-    pub const RAY_WHITE: Self =
-        Self::rgb(245, 245, 245);
+    pub const RAY_WHITE: Self = Self::rgb(245, 245, 245);
 
-    pub const PANIC_RED: Self =
-        Self::rgb(20, 0, 0);
+    pub const PANIC_RED: Self = Self::rgb(20, 0, 0);
 }
 
 // ============================================================
@@ -307,9 +270,7 @@ pub enum TextureError {
 
 impl Texture {
     pub fn load(path: &CStr) -> Result<Self, TextureError> {
-        let raw = unsafe {
-            sys::LoadTexture(path.as_ptr())
-        };
+        let raw = unsafe { sys::LoadTexture(path.as_ptr()) };
 
         if raw.id == 0 {
             Err(TextureError::LoadFailed)
@@ -352,9 +313,7 @@ pub enum TextFileError {
 
 impl TextFile {
     pub fn load(path: &CStr) -> Result<Self, TextFileError> {
-        let data_ptr = unsafe {
-            sys::LoadFileText(path.as_ptr())
-        };
+        let data_ptr = unsafe { sys::LoadFileText(path.as_ptr()) };
 
         if data_ptr.is_null() {
             return Err(TextFileError::LoadFailed);
@@ -365,7 +324,7 @@ impl TextFile {
 
         Ok(TextFile {
             data: data_ptr,
-            data_str
+            data_str,
         })
     }
 
@@ -376,9 +335,7 @@ impl TextFile {
 
 impl Drop for TextFile {
     fn drop(&mut self) {
-        unsafe {
-            sys::UnloadFileText(self.data)
-        }
+        unsafe { sys::UnloadFileText(self.data) }
     }
 }
 
@@ -426,49 +383,31 @@ pub struct Gamepad {
 }
 
 impl Gamepad {
-    pub fn new() -> Self { Self::new_by_id(0) }
-    pub fn new_by_id(id: i32) -> Self { Self { id } }
+    pub fn new() -> Self {
+        Self::new_by_id(0)
+    }
+    pub fn new_by_id(id: i32) -> Self {
+        Self { id }
+    }
 
     pub fn available(self) -> bool {
-        unsafe {
-            sys::IsGamepadAvailable(self.id)
-        }
+        unsafe { sys::IsGamepadAvailable(self.id) }
     }
 
     pub fn pressed(self, button: Button) -> bool {
-        unsafe {
-            sys::IsGamepadButtonPressed(
-                self.id,
-                button as i32,
-            )
-        }
+        unsafe { sys::IsGamepadButtonPressed(self.id, button as i32) }
     }
 
     pub fn down(self, button: Button) -> bool {
-        unsafe {
-            sys::IsGamepadButtonDown(
-                self.id,
-                button as i32,
-            )
-        }
+        unsafe { sys::IsGamepadButtonDown(self.id, button as i32) }
     }
 
     pub fn released(self, button: Button) -> bool {
-        unsafe {
-            sys::IsGamepadButtonReleased(
-                self.id,
-                button as i32,
-            )
-        }
+        unsafe { sys::IsGamepadButtonReleased(self.id, button as i32) }
     }
 
     pub fn axis(self, axis: Axis) -> f32 {
-        unsafe {
-            sys::GetGamepadAxisMovement(
-                self.id,
-                axis as i32,
-            )
-        }
+        unsafe { sys::GetGamepadAxisMovement(self.id, axis as i32) }
     }
 
     /// Screen-oriented stick:
@@ -476,10 +415,7 @@ impl Gamepad {
     /// +X = right
     /// +Y = down
     pub fn left_stick(self) -> Vec2 {
-        Vec2::new(
-            self.axis(Axis::LeftX),
-            -self.axis(Axis::LeftY),
-        )
+        Vec2::new(self.axis(Axis::LeftX), -self.axis(Axis::LeftY))
     }
 
     /// Screen-oriented stick:
@@ -487,20 +423,15 @@ impl Gamepad {
     /// +X = right
     /// +Y = down
     pub fn right_stick(self) -> Vec2 {
-        Vec2::new(
-            self.axis(Axis::RightX),
-            -self.axis(Axis::RightY),
-        )
+        Vec2::new(self.axis(Axis::RightX), -self.axis(Axis::RightY))
     }
 }
-
 
 // ============================================================
 // App
 // ============================================================
 
-static APP_EXISTS: AtomicBool =
-    AtomicBool::new(false);
+static APP_EXISTS: AtomicBool = AtomicBool::new(false);
 
 pub struct App {
     // Prevent App from being Send/Sync.
@@ -515,11 +446,7 @@ pub enum AppError {
 }
 
 impl App {
-    pub fn new(
-        width: usize,
-        height: usize,
-        title: &str,
-    ) -> Result<Self, AppError> {
+    pub fn new(width: usize, height: usize, title: &str) -> Result<Self, AppError> {
         if APP_EXISTS.swap(true, Ordering::Relaxed) {
             return Err(AppError::AlreadyInitialized);
         }
@@ -527,22 +454,13 @@ impl App {
         let c_str = CString::new(title).unwrap();
 
         unsafe {
-            sys::InitWindow(
-                width as c_int,
-                height as c_int,
-                c_str.as_ptr(),
-            );
+            sys::InitWindow(width as c_int, height as c_int, c_str.as_ptr());
         }
 
         if !unsafe { sys::IsWindowReady() } {
-            APP_EXISTS.store(
-                false,
-                Ordering::Relaxed,
-            );
+            APP_EXISTS.store(false, Ordering::Relaxed);
 
-            return Err(
-                AppError::WindowInitializationFailed
-            );
+            return Err(AppError::WindowInitializationFailed);
         }
 
         Ok(Self {
@@ -557,21 +475,14 @@ impl App {
     }
 
     pub fn running(&self) -> bool {
-        !unsafe {
-            sys::WindowShouldClose()
-        }
+        !unsafe { sys::WindowShouldClose() }
     }
 
     pub fn delta_time(&self) -> f32 {
-        unsafe {
-            sys::GetFrameTime()
-        }
+        unsafe { sys::GetFrameTime() }
     }
 
-    pub fn begin_frame(
-        &mut self,
-        clear: Color,
-    ) -> Frame<'_> {
+    pub fn begin_frame(&mut self, clear: Color) -> Frame<'_> {
         unsafe {
             sys::BeginDrawing();
             sys::ClearBackground(clear);
@@ -589,13 +500,9 @@ impl Drop for App {
             sys::CloseWindow();
         }
 
-        APP_EXISTS.store(
-            false,
-            Ordering::Relaxed,
-        );
+        APP_EXISTS.store(false, Ordering::Relaxed);
     }
 }
-
 
 // ============================================================
 // Frame
@@ -608,100 +515,43 @@ pub struct Frame<'app> {
 }
 
 impl Frame<'_> {
-    pub fn line(
-        &mut self,
-        from: Vec2,
-        to: Vec2,
-        thickness: f32,
-        color: Color,
-    ) {
+    pub fn line(&mut self, from: Vec2, to: Vec2, thickness: f32, color: Color) {
         unsafe {
-            sys::DrawLineEx(
-                from,
-                to,
-                thickness,
-                color,
-            );
+            sys::DrawLineEx(from, to, thickness, color);
         }
     }
 
-    pub fn rect(
-        &mut self,
-        rect: Rect,
-        color: Color,
-    ) {
+    pub fn rect(&mut self, rect: Rect, color: Color) {
         unsafe {
-            sys::DrawRectangleRec(
-                rect,
-                color,
-            );
+            sys::DrawRectangleRec(rect, color);
         }
     }
 
     /// This is different from plain DrawRectanglePro call, because origin is set via
     /// applying relative coordinates (i.e. 0 -> 1), instead of raw pixel values
-    pub fn rect_rotation(
-        &mut self,
-        rect: Rect,
-        origin: Vec2,
-        rotation: f32,
-        color: Color,
-    ) {
+    pub fn rect_rotation(&mut self, rect: Rect, origin: Vec2, rotation: f32, color: Color) {
         let origin = Vec2::new(origin.x * rect.width, origin.y * rect.height);
 
-        unsafe {
-            sys::DrawRectanglePro(
-                rect,
-                origin,
-                rotation,
-                color,
-            )
-        }
+        unsafe { sys::DrawRectanglePro(rect, origin, rotation, color) }
     }
 
-    pub fn circle(
-        &mut self,
-        center: Vec2,
-        radius: f32,
-        color: Color,
-    ) {
+    pub fn circle(&mut self, center: Vec2, radius: f32, color: Color) {
         unsafe {
-            sys::DrawCircleV(
-                center,
-                radius,
-                color,
-            );
+            sys::DrawCircleV(center, radius, color);
         }
     }
 
     /// Convenient version.
     ///
     /// Allocates a temporary NUL-terminated buffer.
-    pub fn text(
-        &mut self,
-        text: &str,
-        position: Vec2,
-        size: i32,
-        color: Color,
-    ) {
+    pub fn text(&mut self, text: &str, position: Vec2, size: i32, color: Color) {
         let c_str = CString::new(text).unwrap();
 
-        self.const_text(
-            &c_str,
-            position,
-            size,
-            color,
-        );
+        self.const_text(&c_str, position, size, color);
     }
 
     /// Allocation-free version for persistent/static text.
-    pub fn const_text(
-        &mut self,
-        text: &CStr,
-        position: Vec2,
-        size: i32,
-        color: Color,
-    ) {
+    pub fn const_text(&mut self, text: &CStr, position: Vec2, size: i32, color: Color) {
         unsafe {
             sys::DrawText(
                 text.as_ptr(),
@@ -713,27 +563,14 @@ impl Frame<'_> {
         }
     }
 
-    pub fn measure_text(
-        &self,
-        text: &str,
-        size: i32,
-    ) -> i32 {
+    pub fn measure_text(&self, text: &str, size: i32) -> i32 {
         let c_str = CString::new(text).unwrap();
 
         self.measure_const_text(&c_str, size)
     }
 
-    pub fn measure_const_text(
-        &self,
-        text: &CStr,
-        size: i32,
-    ) -> i32 {
-        unsafe {
-            sys::MeasureText(
-                text.as_ptr(),
-                size as c_int,
-            )
-        }
+    pub fn measure_const_text(&self, text: &CStr, size: i32) -> i32 {
+        unsafe { sys::MeasureText(text.as_ptr(), size as c_int) }
     }
 
     pub fn text_right_align(
@@ -747,7 +584,14 @@ impl Frame<'_> {
     ) {
         let c_str = CString::new(text).unwrap();
 
-        self.const_text_right_align(&c_str, size, right_align_border, horizontal_offset, y, color);
+        self.const_text_right_align(
+            &c_str,
+            size,
+            right_align_border,
+            horizontal_offset,
+            y,
+            color,
+        );
     }
 
     pub fn const_text_right_align(
@@ -759,37 +603,21 @@ impl Frame<'_> {
         y: i32,
         color: Color,
     ) {
-        let x = right_align_border as i32 - self.measure_const_text(&text, size) - horizontal_offset;
+        let x =
+            right_align_border as i32 - self.measure_const_text(&text, size) - horizontal_offset;
 
         self.const_text(&text, (x, y).into(), size, color)
     }
 
-    pub fn texture(
-        &mut self,
-        texture: &Texture,
-        position: Vec2
-    ) {
+    pub fn texture(&mut self, texture: &Texture, position: Vec2) {
         unsafe {
-            sys::DrawTextureV(
-                texture.raw,
-                position,
-                Color::WHITE,
-            );
+            sys::DrawTextureV(texture.raw, position, Color::WHITE);
         }
     }
 
-    pub fn texture_tint(
-        &mut self,
-        texture: &Texture,
-        position: Vec2,
-        tint: Color,
-    ) {
+    pub fn texture_tint(&mut self, texture: &Texture, position: Vec2, tint: Color) {
         unsafe {
-            sys::DrawTextureV(
-                texture.raw,
-                position,
-                tint,
-            );
+            sys::DrawTextureV(texture.raw, position, tint);
         }
     }
 
@@ -802,16 +630,7 @@ impl Frame<'_> {
         rotation: f32,
         tint: Color,
     ) {
-        unsafe {
-            sys::DrawTexturePro(
-                texture.raw,
-                source,
-                dest,
-                origin,
-                rotation,
-                tint,
-            )
-        }
+        unsafe { sys::DrawTexturePro(texture.raw, source, dest, origin, rotation, tint) }
     }
 }
 
@@ -827,39 +646,23 @@ impl Drop for Frame<'_> {
 // Random
 // ============================================================
 pub fn get_random_value(min: i32, max: i32) -> i32 {
-    unsafe {
-        sys::GetRandomValue(min, max)
-    }
+    unsafe { sys::GetRandomValue(min, max) }
 }
 
 // ============================================================
 // Panic handling
 // ============================================================
 /// Displays a simple screen describing a problem. [message] has to be null-terminated
-pub(crate) fn panic_screen(
-    message: &[u8],
-) -> ! {
+pub(crate) fn panic_screen(message: &[u8]) -> ! {
     loop {
         unsafe {
             sys::BeginDrawing();
 
             sys::ClearBackground(Color::PANIC_RED);
 
-            sys::DrawText(
-                c"FATAL ERROR".as_ptr(),
-                40,
-                40,
-                48,
-                Color::RED,
-            );
+            sys::DrawText(c"FATAL ERROR".as_ptr(), 40, 40, 48, Color::RED);
 
-            sys::DrawText(
-                message.as_ptr().cast(),
-                40,
-                120,
-                22,
-                Color::WHITE,
-            );
+            sys::DrawText(message.as_ptr().cast(), 40, 120, 22, Color::WHITE);
 
             sys::EndDrawing();
         }

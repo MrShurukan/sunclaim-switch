@@ -32,7 +32,9 @@ pub enum AsepriteSheetError<K> {
     #[from(skip)]
     UnknownSliceNameInJson(String),
     #[from(skip)]
-    MultipleFramesAreUnsupported { slice_name: String },
+    MultipleFramesAreUnsupported {
+        slice_name: String,
+    },
     #[from(skip)]
     DuplicateSliceName(String),
     #[from(skip)]
@@ -48,7 +50,10 @@ impl<K: AsepriteSheetKey> AsepriteSheet<K> {
         let mut map = BTreeMap::<K, SpriteSheetSection>::new();
 
         // Compress the data and extract just the slice name and bounds pairs
-        let pairs = json.meta.slices.into_iter()
+        let pairs = json
+            .meta
+            .slices
+            .into_iter()
             .map(|AsepriteSlice { name, keys }| {
                 if keys.len() != 1 {
                     return Err(MultipleFramesAreUnsupported { slice_name: name });
@@ -78,7 +83,10 @@ impl<K: AsepriteSheetKey> AsepriteSheet<K> {
             }
         }
 
-        Ok(Self { texture, sections: map })
+        Ok(Self {
+            texture,
+            sections: map,
+        })
     }
 
     /// Draw a sprite from the sheet with a native size (i.e. the same as in the sprite sheet) on
@@ -96,9 +104,22 @@ impl<K: AsepriteSheetKey> AsepriteSheet<K> {
     pub fn draw_tint(&self, frame: &mut Frame, key: K, location: Vec2, tint_color: Color) -> Vec2 {
         let source = self.sections.get(&key).expect("validated in constructor");
 
-        let dest = (location.x, location.y, source.width as f32, source.height as f32).into();
+        let dest = (
+            location.x,
+            location.y,
+            source.width as f32,
+            source.height as f32,
+        )
+            .into();
 
-        frame.texture_pro(&self.texture, (*source).into(), dest, (0, 0).into(), 0f32, tint_color);
+        frame.texture_pro(
+            &self.texture,
+            (*source).into(),
+            dest,
+            (0, 0).into(),
+            0f32,
+            tint_color,
+        );
 
         (source.width, source.height).into()
     }
@@ -106,7 +127,14 @@ impl<K: AsepriteSheetKey> AsepriteSheet<K> {
     pub fn draw_resize(&self, frame: &mut Frame, key: K, location: Rect) {
         let source = self.sections.get(&key).expect("validated in constructor");
 
-        frame.texture_pro(&self.texture, (*source).into(), location, (0, 0).into(), 0f32, Color::WHITE);
+        frame.texture_pro(
+            &self.texture,
+            (*source).into(),
+            location,
+            (0, 0).into(),
+            0f32,
+            Color::WHITE,
+        );
     }
 }
 
@@ -147,9 +175,9 @@ struct AsepriteSliceKey {
 pub struct SpriteSheetSection {
     x: usize,
     y: usize,
-    #[serde(rename="w")]
+    #[serde(rename = "w")]
     width: usize,
-    #[serde(rename="h")]
+    #[serde(rename = "h")]
     height: usize,
 }
 

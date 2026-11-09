@@ -45,8 +45,8 @@ pub fn update(session: &mut Session, input: &GameInput, dt: f32) {
     match session.state {
         GameState::Running => {
             update_running(session, input, dt);
-        },
-        GameState::Error(_) => {},
+        }
+        GameState::Error(_) => {}
     }
 }
 

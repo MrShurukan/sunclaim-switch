@@ -1,9 +1,9 @@
+mod aseprite;
 mod assets;
 mod controller;
 pub mod input;
 mod render;
 mod util;
-mod aseprite;
 
 use crate::game::assets::AssetError;
 use crate::raylib::Frame;

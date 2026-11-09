@@ -16,9 +16,7 @@ struct NewlibAllocator;
 
 unsafe impl GlobalAlloc for NewlibAllocator {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
-        let alignment = layout
-            .align()
-            .max(core::mem::align_of::<usize>());
+        let alignment = layout.align().max(core::mem::align_of::<usize>());
 
         unsafe { memalign(alignment, layout.size()) as *mut u8 }
     }
@@ -55,7 +53,5 @@ fn panic(info: &PanicInfo) -> ! {
     let _ = writeln!(buffer);
     let _ = write!(buffer, "{}", info.message());
 
-    crate::raylib::panic_screen(
-        buffer.as_bytes_with_nul()
-    )
+    crate::raylib::panic_screen(buffer.as_bytes_with_nul())
 }

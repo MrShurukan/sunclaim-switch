@@ -8,7 +8,9 @@ use game_core::building::BuildingKind;
 use game_core::player::PlayerSide;
 
 impl AsepriteSheetKey for Icon {}
-#[derive(Debug, Copy, Clone, Ord, Eq, PartialEq, PartialOrd, strum::EnumString, strum::EnumIter)]
+#[derive(
+    Debug, Copy, Clone, Ord, Eq, PartialEq, PartialOrd, strum::EnumString, strum::EnumIter,
+)]
 pub enum Icon {
     Energy,
     Metal,
@@ -29,7 +31,9 @@ pub enum Icon {
 }
 
 impl AsepriteSheetKey for TileSprite {}
-#[derive(Debug, Copy, Clone, Ord, Eq, PartialEq, PartialOrd, strum::EnumString, strum::EnumIter)]
+#[derive(
+    Debug, Copy, Clone, Ord, Eq, PartialEq, PartialOrd, strum::EnumString, strum::EnumIter,
+)]
 pub enum TileSprite {
     ReactorRed,
     ReactorBlue,
@@ -95,12 +99,15 @@ impl Assets {
 
 // TODO: Better readable errors for game startup
 fn load_aseprite_sheet<K>(texture_path: &CStr, json_path: &CStr) -> Result<AsepriteSheet<K>, String>
-where K: Debug + AsepriteSheetKey {
-    AsepriteSheet::load(texture_path, json_path)
-        .map_err(|e| {
-            format!("texture_path: {}; json_path: {};\nerr: {:?}",
-                    texture_path.to_str().unwrap(),
-                    json_path.to_str().unwrap(),
-                    e)
-        })
+where
+    K: Debug + AsepriteSheetKey,
+{
+    AsepriteSheet::load(texture_path, json_path).map_err(|e| {
+        format!(
+            "texture_path: {}; json_path: {};\nerr: {:?}",
+            texture_path.to_str().unwrap(),
+            json_path.to_str().unwrap(),
+            e
+        )
+    })
 }

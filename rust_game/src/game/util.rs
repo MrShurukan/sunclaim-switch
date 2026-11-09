@@ -16,7 +16,7 @@ impl SinePulser {
         let frequency_rad = if period == 0.0 {
             0.0
         } else {
-            (2.0*PI) / period
+            (2.0 * PI) / period
         };
 
         let half_diff = (to - from) / 2.0;

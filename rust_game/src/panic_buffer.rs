@@ -28,8 +28,7 @@ impl Write for PanicBuffer {
                 break;
             }
 
-            self.buffer[self.len] =
-                if byte == 0 { b'?' } else { byte };
+            self.buffer[self.len] = if byte == 0 { b'?' } else { byte };
 
             self.len += 1;
         }

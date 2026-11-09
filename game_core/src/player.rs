@@ -3,7 +3,7 @@ use crate::resources::{Energy, Metal};
 #[derive(Debug, Copy, Clone)]
 pub enum PlayerSide {
     Red,
-    Blue
+    Blue,
 }
 
 impl PlayerSide {
@@ -32,7 +32,7 @@ impl PlayerSide {
 pub struct Player {
     player_side: PlayerSide,
     available_energy: Energy,
-    available_metal: Metal
+    available_metal: Metal,
 }
 
 impl Player {
