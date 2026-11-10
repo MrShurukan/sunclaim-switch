@@ -12,6 +12,7 @@ use core::{
     ops::{Add, AddAssign, Mul, MulAssign, Sub, SubAssign},
     sync::atomic::{AtomicBool, Ordering},
 };
+
 // ============================================================
 // Math
 // ============================================================
@@ -325,12 +326,20 @@ impl TextFile {
         }
 
         let data_string_slice = unsafe { CStr::from_ptr(data_ptr) };
-        let data_string = data_string_slice.to_str()?.into();
 
-        Ok(TextFile {
-            data: data_ptr,
-            data_str: data_string,
-        })
+        match data_string_slice.to_str() {
+            Ok(data_string) => Ok(TextFile {
+                data: data_ptr,
+                data_str: data_string.into(),
+            }),
+            Err(err) => {
+                unsafe {
+                    sys::UnloadFileText(data_ptr);
+                }
+
+                Err(TextFileError::InvalidUtf8(err))
+            }
+        }
     }
 
     pub fn text_data(&self) -> &str {
