@@ -14,7 +14,7 @@ pub struct World {
     tiles: TileArray,
 
     round_number: u32,
-    active_player: PlayerSide,
+    active_player_side: PlayerSide,
     turn_phase: TurnPhase,
     players: [Player; 2],
     buildings: Vec<Building>,
@@ -36,7 +36,7 @@ impl Default for World {
             }),
 
             round_number: 1,
-            active_player: PlayerSide::Red,
+            active_player_side: PlayerSide::Red,
             turn_phase: TurnPhase::Plan,
             players: [Player::new(PlayerSide::Red), Player::new(PlayerSide::Blue)],
             buildings: vec![
@@ -55,6 +55,31 @@ impl World {
         Self::default()
     }
 
+    pub fn finish_turn(&mut self) {
+        // TODO: Plan should be applied here
+        self.process_player_resources();
+
+        self.active_player_side = self.active_player_side.other();
+    }
+
+    fn process_player_resources(&mut self) {
+        let mut net_change_metal: isize = 0;
+        let mut net_change_energy: isize = 0;
+
+        self.buildings
+            .iter()
+            .filter(|b| b.owner() == self.active_player_side)
+            .for_each(|b| {
+                net_change_metal += b.kind().metal_per_turn() as isize;
+                net_change_energy += b.kind().energy_per_turn() as isize;
+            });
+
+        let current_player = self.active_player_mut();
+
+        current_player.add_metal(net_change_metal);
+        current_player.add_energy(net_change_energy);
+    }
+
     #[must_use]
     pub const fn round_number(&self) -> u32 {
         self.round_number
@@ -62,12 +87,19 @@ impl World {
 
     #[must_use]
     pub const fn active_player_side(&self) -> PlayerSide {
-        self.active_player
+        self.active_player_side
     }
 
     #[must_use]
     pub const fn active_player(&self) -> &Player {
-        &self.players[self.active_player.index()]
+        &self.players[self.active_player_side.index()]
+    }
+
+    #[must_use]
+    fn active_player_mut(&mut self) -> &mut Player {
+        self.players
+            .get_mut(self.active_player_side.index())
+            .expect("Correctly set up array")
     }
 
     #[must_use]

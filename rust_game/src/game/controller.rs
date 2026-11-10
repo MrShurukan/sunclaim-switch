@@ -59,4 +59,9 @@ fn update_running(session: &mut Session, input: GameInput, dt: f32) {
 fn update_plan(session: &mut Session, input: GameInput, dt: f32) {
     // Cursor move
     session.ui_state.direction_held(input.direction_raw, dt);
+
+    // Finish move
+    if input.finish_turn {
+        session.world.finish_turn();
+    }
 }

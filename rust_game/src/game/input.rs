@@ -4,6 +4,7 @@ use game_core::direction::Direction;
 #[derive(Debug, Clone, Copy, Default)]
 pub struct GameInput {
     pub reset: bool,
+    pub finish_turn: bool,
     /// Only has Some on the very frame the button was pressed
     pub direction_pressed: Option<Direction>,
     /// Has Some if direction is held down
@@ -53,6 +54,8 @@ impl GameInput {
         Self {
             reset: (gamepad.pressed(Button::Minus) && gamepad.down(Button::ZL))
                 || (gamepad.pressed(Button::ZL) && gamepad.down(Button::Minus)),
+
+            finish_turn: gamepad.pressed(Button::Y),
 
             direction_pressed: Direction::from_gamepad(gamepad),
             direction_raw: Direction::from_gamepad_raw(gamepad),

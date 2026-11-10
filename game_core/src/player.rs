@@ -1,6 +1,6 @@
 use crate::resources::{Energy, Metal};
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum PlayerSide {
     Red,
     Blue,
@@ -56,5 +56,13 @@ impl Player {
     #[must_use]
     pub fn energy(&self) -> Energy {
         self.available_energy
+    }
+
+    pub fn add_metal(&mut self, net_change_metal: isize) {
+        self.available_metal.add_clamped(net_change_metal);
+    }
+
+    pub fn add_energy(&mut self, net_change_energy: isize) {
+        self.available_energy.add_clamped(net_change_energy);
     }
 }
