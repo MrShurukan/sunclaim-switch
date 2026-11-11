@@ -1,3 +1,6 @@
+[language-server.rust-analyzer.config.cargo]
+extraEnv = { RUSTUP_TOOLCHAIN = "nightly" }
+
 [language-server.rust-analyzer.config.check]
 command = "clippy"
 extraArgs = ["--", "-W", "clippy::pedantic"]
