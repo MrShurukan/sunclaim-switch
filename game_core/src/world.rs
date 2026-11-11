@@ -31,6 +31,8 @@ impl Default for World {
     }
 }
 
+const STARTING_PLAYER: PlayerSide = PlayerSide::Red;
+
 impl World {
     #[must_use]
     #[allow(clippy::missing_panics_doc)]
@@ -44,7 +46,7 @@ impl World {
             }),
 
             round_number: 1,
-            active_player_side: PlayerSide::Red,
+            active_player_side: STARTING_PLAYER,
             turn_phase: TurnPhase::Plan,
             players: [Player::new(PlayerSide::Red), Player::new(PlayerSide::Blue)],
             buildings: vec![
@@ -67,6 +69,10 @@ impl World {
         // TODO: Plan should be applied here
 
         self.switch_players();
+        // Increment the round counter only after two people made a move
+        if self.active_player_side == STARTING_PLAYER {
+            self.round_number += 1;
+        }
         self.begin_turn();
     }
 
