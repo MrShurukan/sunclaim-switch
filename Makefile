@@ -60,7 +60,7 @@ ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
 RUST_DIR := $(TOPDIR)/rust_game
-RUST_LIB := $(RUST_DIR)/target/aarch64-nintendo-switch-freestanding/release/librust_game.a
+RUST_LIB := $(TOPDIR)/target/aarch64-nintendo-switch-freestanding/release/librust_game.a
 
 RAYLIB_DIR ?= $(HOME)/dev/raylib-nx
 RAYLIB_LIB := $(RAYLIB_DIR)/src/libraylib.a

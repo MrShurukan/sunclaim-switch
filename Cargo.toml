@@ -1,0 +1,13 @@
+[workspace]
+resolver = "2"
+members = [
+    "game_core",
+    "rust_game",
+]
+default-members = ["rust_game"]
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"

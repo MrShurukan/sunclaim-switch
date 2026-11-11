@@ -3,6 +3,8 @@ build
 rust_game/target
 game_core/target
 
+/target/
+
 # Built binaries and metadata
 *.elf
 *.lst
