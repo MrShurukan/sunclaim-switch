@@ -27,7 +27,15 @@ pub enum TurnPhase {
 
 impl Default for World {
     fn default() -> Self {
-        Self {
+        Self::new()
+    }
+}
+
+impl World {
+    #[must_use]
+    #[allow(clippy::missing_panics_doc)]
+    pub fn new() -> Self {
+        let mut world = Self {
             tiles: core::array::from_fn(|index| {
                 let x = index % TILES_ARRAY_X_DIM;
                 let y = index / TILES_ARRAY_X_DIM;
@@ -45,20 +53,24 @@ impl Default for World {
                 Building::new(PlayerSide::Blue, REACTOR_BLUE_START, BuildingKind::Reactor),
                 Building::new(PlayerSide::Blue, MINER_BLUE_START, BuildingKind::Miner),
             ],
-        }
-    }
-}
+        };
 
-impl World {
-    #[must_use]
-    pub fn new() -> Self {
-        Self::default()
+        world.begin_turn();
+        world
+    }
+
+    pub fn begin_turn(&mut self) {
+        self.process_player_resources();
     }
 
     pub fn finish_turn(&mut self) {
         // TODO: Plan should be applied here
-        self.process_player_resources();
 
+        self.switch_players();
+        self.begin_turn();
+    }
+
+    fn switch_players(&mut self) {
         self.active_player_side = self.active_player_side.other();
     }
 
