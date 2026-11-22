@@ -1,5 +1,5 @@
 use super::input::GameInput;
-use crate::game::render::UiState;
+use crate::game::ui::UiState;
 use alloc::string::String;
 use game_core::world::{TurnPhase, World};
 

@@ -127,6 +127,14 @@ impl<K: AsepriteSheetKey> AsepriteSheet<K> {
         (source.width, source.height).into()
     }
 
+    /// Size of the sprite with this key
+    #[must_use]
+    pub fn section_size(&self, key: K) -> Vec2 {
+        let source = self.sections.get(&key).expect("validated in constructor");
+
+        (source.width, source.height).into()
+    }
+
     pub fn draw_resize(&self, frame: &mut Frame, key: K, location: Rect) {
         let source = self.sections.get(&key).expect("validated in constructor");
 

@@ -3,6 +3,7 @@ mod assets;
 mod controller;
 pub mod input;
 mod render;
+mod ui;
 mod util;
 
 use crate::game::assets::AssetError;
