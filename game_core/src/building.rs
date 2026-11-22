@@ -8,7 +8,7 @@ pub struct Building {
     owner: PlayerSide,
     position: TilePos,
     hp: u32,
-    kind: BuildingKind,
+    state: BuildingState,
 }
 
 macro_rules! unwrap_const {
@@ -33,7 +33,7 @@ impl Building {
             owner,
             position,
             hp: kind.start_hp(),
-            kind,
+            state: kind.into(),
         }
     }
 
@@ -59,7 +59,32 @@ impl Building {
 
     #[must_use]
     pub const fn kind(&self) -> BuildingKind {
-        self.kind
+        self.state.kind()
+    }
+}
+
+#[derive(Debug)]
+pub enum BuildingState {
+    Reactor,
+    Miner,
+    Mortar {
+        angle: f32,
+        power: usize,
+        last_shot_position: Option<(f32, f32)>,
+    },
+    DirectGun {
+        angle: f32,
+        last_shot_position: Option<(f32, f32)>,
+    },
+}
+impl BuildingState {
+    const fn kind(&self) -> BuildingKind {
+        match self {
+            BuildingState::Reactor => BuildingKind::Reactor,
+            BuildingState::Miner => BuildingKind::Miner,
+            BuildingState::Mortar { .. } => BuildingKind::Mortar,
+            BuildingState::DirectGun { .. } => BuildingKind::DirectGun,
+        }
     }
 }
 
@@ -67,6 +92,26 @@ impl Building {
 pub enum BuildingKind {
     Reactor,
     Miner,
+    Mortar,
+    DirectGun,
+}
+
+impl From<BuildingKind> for BuildingState {
+    fn from(value: BuildingKind) -> Self {
+        match value {
+            BuildingKind::Reactor => BuildingState::Reactor,
+            BuildingKind::Miner => BuildingState::Miner,
+            BuildingKind::Mortar => BuildingState::Mortar {
+                angle: 0.0,
+                power: 0,
+                last_shot_position: None,
+            },
+            BuildingKind::DirectGun => BuildingState::DirectGun {
+                angle: 0.0,
+                last_shot_position: None,
+            },
+        }
+    }
 }
 
 impl BuildingKind {
@@ -75,6 +120,8 @@ impl BuildingKind {
         match self {
             BuildingKind::Reactor => 100,
             BuildingKind::Miner => 35,
+            BuildingKind::Mortar => 40,
+            BuildingKind::DirectGun => 50,
         }
     }
 
@@ -83,6 +130,8 @@ impl BuildingKind {
         match self {
             BuildingKind::Reactor => "Reactor",
             BuildingKind::Miner => "Miner",
+            BuildingKind::Mortar => "Mortar",
+            BuildingKind::DirectGun => "Gun",
         }
     }
 
@@ -90,6 +139,7 @@ impl BuildingKind {
     pub fn metal_per_turn(self) -> u8 {
         match self {
             BuildingKind::Reactor | BuildingKind::Miner => 4,
+            BuildingKind::Mortar | BuildingKind::DirectGun => 0,
         }
     }
 
@@ -97,7 +147,7 @@ impl BuildingKind {
     pub fn energy_per_turn(self) -> u8 {
         match self {
             BuildingKind::Reactor => 12,
-            BuildingKind::Miner => 0,
+            BuildingKind::Miner | BuildingKind::Mortar | BuildingKind::DirectGun => 0,
         }
     }
 }

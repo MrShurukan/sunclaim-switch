@@ -45,6 +45,10 @@ pub enum TileSprite {
     MinerBlue,
     CursorRed,
     CursorBlue,
+    MortarRed,
+    MortarBlue,
+    DirectGunRed,
+    DirectGunBlue,
 }
 
 pub trait TileDrawable {
@@ -69,8 +73,10 @@ macro_rules! building_tiles {
 impl TileDrawable for BuildingKind {
     fn tile_sprite(&self, player_side: PlayerSide) -> TileSprite {
         building_tiles!(self, player_side;
-            Reactor => (ReactorRed, ReactorBlue),
-            Miner   => (MinerRed, MinerBlue),
+            Reactor   => (ReactorRed, ReactorBlue),
+            Miner     => (MinerRed, MinerBlue),
+            Mortar    => (MortarRed, MortarBlue),
+            DirectGun => (DirectGunRed, DirectGunBlue),
         )
     }
 }

@@ -14,6 +14,14 @@ pub enum PanelState {
     Minimized,
     Expanded,
 }
+impl PanelState {
+    const fn other(self) -> PanelState {
+        match self {
+            PanelState::Minimized => PanelState::Expanded,
+            PanelState::Expanded => PanelState::Minimized,
+        }
+    }
+}
 
 #[derive(Debug)]
 pub struct UiState {
@@ -110,6 +118,10 @@ impl UiState {
 
         self.direction_hold_info = Some(DirectionHoldInfo::new_first(dir));
     }
+
+    pub fn toggle_panel(&mut self) {
+        self.panel_state = self.panel_state.other();
+    }
 }
 
 // ====== Draw ======
@@ -190,8 +202,18 @@ const SIDE_PANEL_ICON_SIZE: usize = TILE_SIZE;
 
 const SIDE_PANEL_COLOR: Color = Color::rgb(12, 29, 51);
 
+const SIDE_PANEL_FONT_SIZE: i32 = 16;
+
 fn draw_side_panel(session: &Session, assets: &Assets, frame: &mut Frame) {
-    // TODO: Expanded panel
+    match session.ui_state.panel_state {
+        PanelState::Minimized => draw_minimized_side_panel(session, assets, frame),
+        PanelState::Expanded => draw_expanded_side_panel(session, assets, frame),
+    }
+}
+
+fn draw_expanded_side_panel(session: &Session, assets: &Assets, frame: &mut Frame) {}
+
+fn draw_minimized_side_panel(session: &Session, assets: &Assets, frame: &mut Frame) {
     frame.rect(
         (
             SIDE_PANEL_START_X,
@@ -237,7 +259,7 @@ fn draw_side_panel(session: &Session, assets: &Assets, frame: &mut Frame) {
                 SIDE_PANEL_ICON_START_Y + SIDE_PANEL_ICON_SIZE + 23,
             )
                 .into(),
-            16,
+            SIDE_PANEL_FONT_SIZE,
             Color::WHITE,
         );
 
@@ -249,7 +271,7 @@ fn draw_side_panel(session: &Session, assets: &Assets, frame: &mut Frame) {
                 SIDE_PANEL_ICON_START_Y + SIDE_PANEL_ICON_SIZE + 50,
             )
                 .into(),
-            16,
+            SIDE_PANEL_FONT_SIZE,
             Color::WHITE,
         );
 
@@ -292,7 +314,7 @@ fn side_panel_preview_text(frame: &mut Frame<'_>, preview_text: &str) {
             SIDE_PANEL_ICON_START_Y + 20,
         )
             .into(),
-        16,
+        SIDE_PANEL_FONT_SIZE,
         Color::WHITE,
     );
 }

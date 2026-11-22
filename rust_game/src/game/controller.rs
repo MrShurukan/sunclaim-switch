@@ -60,6 +60,11 @@ fn update_plan(session: &mut Session, input: GameInput, dt: f32) {
     // Cursor move
     session.ui_state.direction_held(input.direction_raw, dt);
 
+    // Panel toggle
+    if input.panel_toggle {
+        session.ui_state.toggle_panel();
+    }
+
     // Finish move
     if input.finish_turn {
         session.world.finish_turn();

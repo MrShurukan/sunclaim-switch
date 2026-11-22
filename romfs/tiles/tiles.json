@@ -1,10 +1,10 @@
 { "frames": {
    "tiles.aseprite": {
-    "frame": { "x": 0, "y": 0, "w": 288, "h": 96 },
+    "frame": { "x": 0, "y": 0, "w": 288, "h": 192 },
     "rotated": false,
     "trimmed": false,
-    "spriteSourceSize": { "x": 0, "y": 0, "w": 288, "h": 96 },
-    "sourceSize": { "w": 288, "h": 96 },
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 288, "h": 192 },
+    "sourceSize": { "w": 288, "h": 192 },
     "duration": 100
    }
  },
@@ -13,19 +13,23 @@
   "version": "1.3.18.6-x64",
   "image": "tiles.png",
   "format": "RGBA8888",
-  "size": { "w": 288, "h": 96 },
+  "size": { "w": 288, "h": 192 },
   "scale": "1",
   "slices": [
-   { "name": "ReactorRed", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 0, "w": 48, "h": 48 } }] },
-   { "name": "ReactorBlue", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 48, "y": 0, "w": 48, "h": 48 } }] },
-   { "name": "WallLeft", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 96, "y": 0, "w": 48, "h": 48 } }] },
-   { "name": "WallRight", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 240, "y": 0, "w": 48, "h": 48 } }] },
-   { "name": "WallDown", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 192, "y": 0, "w": 48, "h": 48 } }] },
-   { "name": "WallUp", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 144, "y": 0, "w": 48, "h": 48 } }] },
-   { "name": "MinerRed", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 48, "w": 48, "h": 48 } }] },
-   { "name": "MinerBlue", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 48, "y": 48, "w": 48, "h": 48 } }] },
+   { "name": "DirectGunBlue", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 48, "y": 144, "w": 48, "h": 48 } }] },
+   { "name": "DirectGunRed", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 144, "w": 48, "h": 48 } }] },
+   { "name": "MortarBlue", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 48, "y": 96, "w": 48, "h": 48 } }] },
+   { "name": "MortarRed", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 96, "w": 48, "h": 48 } }] },
+   { "name": "CursorRed", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 144, "y": 48, "w": 48, "h": 48 } }] },
    { "name": "CursorBlue", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 96, "y": 48, "w": 48, "h": 48 } }] },
-   { "name": "CursorRed", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 144, "y": 48, "w": 48, "h": 48 } }] }
+   { "name": "MinerBlue", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 48, "y": 48, "w": 48, "h": 48 } }] },
+   { "name": "MinerRed", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 48, "w": 48, "h": 48 } }] },
+   { "name": "WallUp", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 144, "y": 0, "w": 48, "h": 48 } }] },
+   { "name": "WallDown", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 192, "y": 0, "w": 48, "h": 48 } }] },
+   { "name": "WallRight", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 240, "y": 0, "w": 48, "h": 48 } }] },
+   { "name": "WallLeft", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 96, "y": 0, "w": 48, "h": 48 } }] },
+   { "name": "ReactorBlue", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 48, "y": 0, "w": 48, "h": 48 } }] },
+   { "name": "ReactorRed", "color": "#0000ffff", "keys": [{ "frame": 0, "bounds": {"x": 0, "y": 0, "w": 48, "h": 48 } }] }
   ]
  }
 }
