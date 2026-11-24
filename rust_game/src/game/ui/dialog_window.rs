@@ -1,6 +1,6 @@
 use alloc::{string::String, vec::Vec};
 
-use super::layout::{center_vertically, RowCursor};
+use super::layout::{center_horizontally, center_vertically, grown, RowCursor};
 use super::layout_metrics::LAYOUT;
 use super::navigation::{Orientation, Selection};
 use super::theme;
@@ -10,10 +10,6 @@ use game_core::direction::Direction;
 
 /// Width of the dialog window
 const WINDOW_WIDTH: f32 = 640.0;
-/// Distance from the window edge to its content
-const PADDING: f32 = 20.0;
-/// Thickness of the window border and of the borders of unselected buttons
-const BORDER: f32 = 2.0;
 /// Height of a button
 const BUTTON_HEIGHT: f32 = 44.0;
 /// Horizontal padding inside a button
@@ -21,7 +17,11 @@ const BUTTON_PADDING: f32 = 24.0;
 /// Gap between the buttons
 const BUTTON_GAP: f32 = 24.0;
 /// The window fits its title, the row of buttons and the padding around them
-const WINDOW_HEIGHT: f32 = PADDING + theme::LINE_HEIGHT_TITLE + PADDING + BUTTON_HEIGHT + PADDING;
+const WINDOW_HEIGHT: f32 = theme::PADDING_WINDOW
+    + theme::LINE_HEIGHT_TITLE
+    + theme::PADDING_WINDOW
+    + BUTTON_HEIGHT
+    + theme::PADDING_WINDOW;
 
 /// What a button of a dialog does when it's pressed
 pub type DialogAction = fn(&mut Session);
@@ -82,14 +82,14 @@ pub fn draw(dialog: &DialogWindow, frame: &mut Frame) {
     frame.rect(LAYOUT.screen, theme::COLOR_OVERLAY);
 
     let window = Rect::new(
-        LAYOUT.screen.x + (LAYOUT.screen.width - WINDOW_WIDTH) / 2.0,
+        center_horizontally(LAYOUT.screen, WINDOW_WIDTH),
         center_vertically(LAYOUT.screen, WINDOW_HEIGHT),
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
     );
 
     // A rectangle slightly bigger than the window serves as its border
-    frame.rect(grown(window, BORDER), theme::COLOR_TEXT);
+    frame.rect(grown(window, theme::WINDOW_BORDER), theme::COLOR_TEXT);
     frame.rect(window, theme::COLOR_DIALOG_BG);
 
     draw_title(dialog, window, frame);
@@ -103,8 +103,8 @@ fn draw_title(dialog: &DialogWindow, window: Rect, frame: &mut Frame) {
     frame.text(
         &dialog.title,
         (
-            window.x + (window.width - title_width as f32) / 2.0,
-            window.y + PADDING,
+            center_horizontally(window, title_width as f32),
+            window.y + theme::PADDING_WINDOW,
         )
             .into(),
         theme::FONT_SIZE_TITLE,
@@ -122,9 +122,10 @@ fn draw_buttons(dialog: &DialogWindow, window: Rect, frame: &mut Frame) {
         .sum::<f32>()
         + BUTTON_GAP * buttons.len().saturating_sub(1) as f32;
 
-    let buttons_y = window.y + PADDING + theme::LINE_HEIGHT_TITLE + PADDING;
+    let buttons_y =
+        window.y + theme::PADDING_WINDOW + theme::LINE_HEIGHT_TITLE + theme::PADDING_WINDOW;
     let mut row = RowCursor::new(
-        window.x + (window.width - total_width) / 2.0,
+        center_horizontally(window, total_width),
         buttons_y,
         BUTTON_GAP,
     );
@@ -135,7 +136,7 @@ fn draw_buttons(dialog: &DialogWindow, window: Rect, frame: &mut Frame) {
         let button_rect = Rect::new(position.x, position.y, width, BUTTON_HEIGHT);
         let is_selected = index == dialog.selected.index();
 
-        frame.rect(grown(button_rect, BORDER), theme::COLOR_TEXT);
+        frame.rect(grown(button_rect, theme::WINDOW_BORDER), theme::COLOR_TEXT);
         if is_selected {
             frame.rect(button_rect, theme::COLOR_SELECTION);
         } else {
@@ -164,14 +165,4 @@ fn draw_buttons(dialog: &DialogWindow, window: Rect, frame: &mut Frame) {
 #[allow(clippy::cast_precision_loss)]
 fn button_width(frame: &Frame, button: &DialogButton) -> f32 {
     frame.measure_text(&button.text, theme::FONT_SIZE_TITLE) as f32 + 2.0 * BUTTON_PADDING
-}
-
-/// The rectangle grown by this much on every side
-fn grown(rect: Rect, by: f32) -> Rect {
-    Rect::new(
-        rect.x - by,
-        rect.y - by,
-        rect.width + 2.0 * by,
-        rect.height + 2.0 * by,
-    )
 }

@@ -1,10 +1,11 @@
 use super::assets::{Assets, Icon, TileDrawable, TileSprite};
 use super::controller::{ErrorInfo, GameState, Session};
 use super::ui::layout::{
-    center_vertically, icon_group_width, icon_group_with_text, RowCursor, RowCursorFromRight,
+    center_horizontally, center_vertically, icon_group_width, icon_group_with_text, RowCursor,
+    RowCursorFromRight,
 };
 use super::ui::layout_metrics::LAYOUT;
-use super::ui::{dialog_window, panel, theme};
+use super::ui::{context_menu, dialog_window, panel, theme};
 use crate::game::util::SinePulser;
 use crate::raylib::{Color, Frame};
 use alloc::format;
@@ -23,12 +24,17 @@ fn draw_running(session: &Session, assets: &Assets, frame: &mut Frame) {
     // UI
     draw_top_bar(session, assets, frame);
     panel::draw(session, assets, frame);
-    draw_bottom_bar(assets, frame);
+    draw_bottom_bar(session, assets, frame);
 
     // Field
     draw_field(session, assets, frame);
 
     draw_cursor(session, assets, frame);
+
+    // The context menu sits on the field, next to the tile it belongs to
+    if let Some(menu) = session.ui_state.context_menu() {
+        context_menu::draw(menu, frame);
+    }
 
     // The dialog goes on top of everything
     if let Some(dialog) = session.ui_state.dialog_window() {
@@ -92,8 +98,14 @@ const HINTS: &[(&[Icon], &str)] = &[
     (&[Icon::Y], "Finish turn"),
 ];
 
-fn draw_bottom_bar(assets: &Assets, frame: &mut Frame) {
+fn draw_bottom_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
     frame.rect(LAYOUT.bottom_bar, theme::COLOR_BAR_BG);
+
+    // A notice takes the place of the hints for a few seconds
+    if let Some(notice) = session.ui_state.notice() {
+        draw_notice(notice, frame);
+        return;
+    }
 
     let y = center_vertically(LAYOUT.bottom_bar, theme::ROW_HEIGHT_ICON);
     let mut row = RowCursor::new(theme::PADDING_MD, y, theme::GAP_HINT);
@@ -112,6 +124,22 @@ fn draw_bottom_bar(assets: &Assets, frame: &mut Frame) {
             theme::COLOR_TEXT,
         );
     }
+}
+
+#[allow(clippy::cast_precision_loss)]
+fn draw_notice(notice: &str, frame: &mut Frame) {
+    let width = frame.measure_text(notice, theme::FONT_SIZE_TITLE);
+
+    frame.text(
+        notice,
+        (
+            center_horizontally(LAYOUT.bottom_bar, width as f32),
+            center_vertically(LAYOUT.bottom_bar, theme::LINE_HEIGHT_TITLE),
+        )
+            .into(),
+        theme::FONT_SIZE_TITLE,
+        theme::COLOR_NOTICE,
+    );
 }
 
 fn draw_field(session: &Session, assets: &Assets, frame: &mut Frame) {

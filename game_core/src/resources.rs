@@ -51,4 +51,10 @@ impl Cost {
     pub const fn new(metal: Metal, energy: Energy) -> Self {
         Self { metal, energy }
     }
+
+    /// Whether the budget covers both parts of the cost
+    #[must_use]
+    pub const fn fits_in(self, budget: Self) -> bool {
+        self.metal.0 <= budget.metal.0 && self.energy.0 <= budget.energy.0
+    }
 }

@@ -22,6 +22,8 @@ pub const COLOR_SELECTION: Color = Color::rgb(255, 200, 60);
 pub const COLOR_DIALOG_BG: Color = Color::rgb(23, 54, 93);
 /// Translucent black dimming the game behind a dialog
 pub const COLOR_OVERLAY: Color = Color::rgba(0, 0, 0, 150);
+/// Text of a notice in the bottom bar
+pub const COLOR_NOTICE: Color = Color::rgb(255, 100, 100);
 
 // ===== Font sizes =====
 
@@ -52,3 +54,13 @@ pub const LINE_HEIGHT_BODY: f32 = 22.0;
 pub const LINE_HEIGHT_TITLE: f32 = 22.0;
 /// Height of a row consisting of icons with text
 pub const ROW_HEIGHT_ICON: f32 = 28.0;
+/// Distance from the edge of a window to its content
+pub const PADDING_WINDOW: f32 = 20.0;
+/// Thickness of a window border
+pub const WINDOW_BORDER: f32 = 2.0;
+/// Height of one line of a context menu
+pub const MENU_ROW_HEIGHT: f32 = LINE_HEIGHT_BODY + 2.0 * PADDING_SM;
+/// Distance from the edge of a context menu to its lines
+pub const MENU_PADDING: f32 = 6.0;
+/// Gap between the lines of a context menu
+pub const MENU_ROW_GAP: f32 = 8.0;

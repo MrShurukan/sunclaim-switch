@@ -1,14 +1,14 @@
 //! The side panel: a collapsed card of the selected tile, or the expanded
 //! plan overview (once implemented).
 
-use super::layout::{center_vertically, icon_group_with_text, ColumnCursor};
+use super::layout::{draw_selectable_row, icon_group_with_text, ColumnCursor};
 use super::layout_metrics::LAYOUT;
 use super::{theme, PanelState};
 use crate::game::assets::{Assets, Icon, TileDrawable};
 use crate::game::controller::Session;
 use crate::raylib::{Color, Frame, Rect, Vec2};
 use alloc::format;
-use game_core::plan::Plan;
+use game_core::plan::{Plan, PlanAction};
 
 /// Offset of the preview icon from the corner of the panel
 const CARD_ICON_OFFSET: Vec2 = Vec2::new(5.0, 6.0);
@@ -24,13 +24,13 @@ pub fn draw(session: &Session, assets: &Assets, frame: &mut Frame) {
     }
 }
 
-/// Height of one slot row of the expanded panel
-const SLOT_HEIGHT: f32 = 40.0;
+/// Height of one slot row of the expanded panel: two lines of text with the padding around
+const SLOT_HEIGHT: f32 = 2.0 * theme::LINE_HEIGHT_BODY + 2.0 * theme::PADDING_SM;
 /// Gap between the slot rows
 const SLOT_GAP: f32 = 8.0;
 
 /// TODO: The expanded panel slides over the field and shows the full plan overview: fixed
-/// build/repair rows and reorderable shots. For now it only lists the slots
+/// build/repair rows and reorderable shots. For now it only lists the commands
 fn draw_expanded(session: &Session, _assets: &Assets, frame: &mut Frame) {
     let panel = LAYOUT.side_panel;
     frame.rect(panel, theme::COLOR_PANEL_BG);
@@ -43,37 +43,37 @@ fn draw_expanded(session: &Session, _assets: &Assets, frame: &mut Frame) {
     for slot in 0..Plan::MAX_ACTIONS {
         let position = rows.next(SLOT_HEIGHT);
         let row = Rect::new(position.x, position.y, content_width, SLOT_HEIGHT);
-        let is_selected = slot == selected;
+        let (kind, detail) = describe(session, slot);
 
-        if is_selected {
-            frame.rect(row, theme::COLOR_SELECTION);
-        }
-
-        // Dark text reads better on the selection
-        let color = if is_selected {
-            theme::COLOR_PANEL_BG
+        let title = format!("{}. {kind}", slot + 1);
+        let lines = [title.as_str(), detail];
+        let shown = if detail.is_empty() {
+            &lines[..1]
         } else {
-            theme::COLOR_TEXT
+            &lines[..2]
         };
-        frame.text(
-            &format!("{}. {}", slot + 1, slot_label(session, slot)),
-            (
-                position.x + theme::PADDING_SM,
-                center_vertically(row, theme::LINE_HEIGHT_BODY),
-            )
-                .into(),
-            theme::FONT_SIZE_BODY,
-            color,
-        );
+
+        draw_selectable_row(frame, row, shown, slot == selected);
     }
 }
 
-/// Commands have no names of their own yet
-fn slot_label(session: &Session, slot: usize) -> &'static str {
-    if session.plan.get(slot).is_some() {
-        "Command"
-    } else {
-        "Empty"
+/// What the slot holds: the kind of its command and what the command is about
+///
+/// TODO: A stand-in. The rows will show the commands with their sprites
+fn describe(session: &Session, slot: usize) -> (&'static str, &'static str) {
+    match session.plan.get(slot) {
+        None => ("Empty", ""),
+        Some(PlanAction::Build { kind, .. }) => ("Build", kind.name()),
+        Some(PlanAction::Repair { .. }) => ("Repair", ""),
+        Some(PlanAction::Shoot { building_id }) => (
+            "Shoot",
+            session
+                .world
+                .buildings()
+                .iter()
+                .find(|building| building.id() == building_id)
+                .map_or("", |gun| gun.kind().name()),
+        ),
     }
 }
 

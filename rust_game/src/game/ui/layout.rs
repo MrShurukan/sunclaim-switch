@@ -10,6 +10,12 @@ pub const fn center_vertically(container: Rect, content_height: f32) -> f32 {
     container.y + (container.height - content_height) / 2.0
 }
 
+/// Horizontal position of content centered inside a container of `content_width`
+#[must_use]
+pub const fn center_horizontally(container: Rect, content_width: f32) -> f32 {
+    container.x + (container.width - content_width) / 2.0
+}
+
 /// Hands out positions of rows, top to bottom
 pub struct ColumnCursor {
     x: f32,
@@ -104,6 +110,41 @@ pub fn icon_group_width<K: AsepriteSheetKey>(
     }
 
     width + frame.measure_text(text, font_size) as f32
+}
+
+/// The rectangle grown by this much on every side
+#[must_use]
+pub const fn grown(rect: Rect, by: f32) -> Rect {
+    Rect::new(
+        rect.x - by,
+        rect.y - by,
+        rect.width + 2.0 * by,
+        rect.height + 2.0 * by,
+    )
+}
+
+/// A row of a list with its lines of text going down from its top. The selected row is
+/// filled with the selection color
+pub fn draw_selectable_row(frame: &mut Frame, row: Rect, lines: &[&str], is_selected: bool) {
+    if is_selected {
+        frame.rect(row, theme::COLOR_SELECTION);
+    }
+
+    // Dark text reads better on the selection
+    let color = if is_selected {
+        theme::COLOR_PANEL_BG
+    } else {
+        theme::COLOR_TEXT
+    };
+
+    let mut text_lines =
+        ColumnCursor::new(row.x + theme::PADDING_SM, row.y + theme::PADDING_SM, 0.0);
+
+    for line in lines {
+        let position = text_lines.next(theme::LINE_HEIGHT_BODY);
+
+        frame.text(line, position, theme::FONT_SIZE_BODY, color);
+    }
 }
 
 /// Draws one or several icons in a row, followed by text

@@ -1,4 +1,4 @@
-use crate::resources::{Energy, Metal};
+use crate::resources::{Cost, Energy, Metal};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum PlayerSide {
@@ -56,6 +56,12 @@ impl Player {
     #[must_use]
     pub fn energy(&self) -> Energy {
         self.available_energy
+    }
+
+    /// Whether the player's stock covers the cost
+    #[must_use]
+    pub fn can_afford(&self, cost: Cost) -> bool {
+        cost.fits_in(Cost::new(self.available_metal, self.available_energy))
     }
 
     pub fn add_metal(&mut self, net_change_metal: isize) {

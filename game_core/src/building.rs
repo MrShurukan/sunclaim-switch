@@ -62,6 +62,11 @@ impl Building {
     pub const fn kind(&self) -> BuildingKind {
         self.state.kind()
     }
+
+    /// Lowers the health by the damage, not below zero
+    pub fn take_damage(&mut self, damage: u32) {
+        self.hp = self.hp.saturating_sub(damage);
+    }
 }
 
 #[derive(Debug)]
@@ -149,7 +154,7 @@ impl BuildingKind {
     }
 
     #[must_use]
-    pub fn name(self) -> &'static str {
+    pub const fn name(self) -> &'static str {
         match self {
             BuildingKind::Reactor => "Reactor",
             BuildingKind::Miner => "Miner",

@@ -241,6 +241,16 @@ pub enum PlanError {
     NotBuildable,
     /// The gun of the shot isn't on the field or isn't a weapon
     NoSuchGun,
+    /// A building already stands on the tile of the build
+    TileOccupied,
+    /// The tile of the build lies outside the building zone of the player
+    OutsideBuildZone,
+    /// There is nothing of the player's to repair on the tile
+    NothingToRepair,
+    /// The gun of the shot belongs to the other player
+    ForeignGun,
+    /// The plan together with the command costs more than the player has
+    NotEnoughResources,
 }
 
 /// Direction of a shot move inside the shooting phase

@@ -102,7 +102,7 @@ pub enum Orientation {
 }
 
 /// The selected item of a list laid out along one line
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Selection {
     index: usize,
 }
@@ -115,7 +115,7 @@ impl Selection {
     }
 
     #[must_use]
-    pub const fn index(&self) -> usize {
+    pub const fn index(self) -> usize {
         self.index
     }
 
