@@ -1,7 +1,10 @@
 use super::input::GameInput;
 use crate::game::ui::UiState;
 use alloc::string::String;
-use game_core::world::{TurnPhase, World};
+use game_core::{
+    plan::Plan,
+    world::{TurnPhase, World},
+};
 
 /// Major divisions of the game state. Fitting additions would be something like `MainMenu`,
 /// `Settings`, `GameOver`, etc.
@@ -23,6 +26,8 @@ pub struct ErrorInfo {
 pub struct Session {
     pub state: GameState,
     pub world: World,
+    /// Plan by the active player
+    pub plan: Plan,
     pub ui_state: UiState,
     pub elapsed_time: f32,
 }
@@ -33,6 +38,7 @@ impl Session {
             state: GameState::Running,
             world: World::new(),
             ui_state: UiState::new(),
+            plan: Plan::new(),
             elapsed_time: 0.0,
         }
     }
