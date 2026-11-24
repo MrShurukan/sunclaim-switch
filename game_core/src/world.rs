@@ -2,7 +2,7 @@ use crate::building::{
     Building, BuildingKind, MINER_BLUE_START, MINER_RED_START, REACTOR_BLUE_START,
     REACTOR_RED_START,
 };
-use crate::plan::{Plan, PlanAction};
+use crate::plan::{Plan, PlanAction, PlanError};
 use crate::player::{Player, PlayerSide};
 use crate::resources::Cost;
 use crate::tile::{Tile, TilePos, TILES_ARRAY_SIZE, TILES_ARRAY_X_DIM};
@@ -137,12 +137,73 @@ impl World {
         self.buildings.iter().find(|b| b.position() == pos)
     }
 
+    /// Adds the command to the plan after checking it against the field. From outside the
+    /// core the commands get into a plan only here and through [`Self::replace_in_plan`]: the
+    /// plan's own `add` and `replace` are private to the core. So every command of a plan has
+    /// passed the checks of the field by the time the plan is priced or executed
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error if the field doesn't allow the command: a shot needs
+    /// the building to exist on the field, and the building has to be a weapon. The rules of the plan apply as
+    /// well.
+    ///
+    /// ```compile_fail
+    /// # hide
+    /// use game_core::plan::{Plan, PlanAction};
+    /// use game_core::tile::TilePos;
+    ///
+    /// let mut plan = Plan::new();
+    /// plan.add(PlanAction::Repair {
+    ///     position: TilePos::new(0, 0).unwrap(),
+    /// });
+    /// ```
+    pub fn add_to_plan(&self, plan: &mut Plan, action: PlanAction) -> Result<usize, PlanError> {
+        self.check_on_field(action)?;
+
+        plan.add(action)
+    }
+
+    /// Replaces the command in the slot of the plan with an edited version of it and returns
+    /// the previous one. The new command goes through the same checks as in [`Self::add_to_plan`]
+    ///
+    /// # Errors
+    ///
+    /// This function will return an error for the same reasons as [`Self::add_to_plan`], and
+    /// also if the slot is empty or the new command belongs to another phase
+    pub fn replace_in_plan(
+        &self,
+        plan: &mut Plan,
+        index: usize,
+        action: PlanAction,
+    ) -> Result<PlanAction, PlanError> {
+        self.check_on_field(action)?;
+
+        plan.replace(index, action)
+    }
+
+    /// The rules of a single command that need the field
+    fn check_on_field(&self, action: PlanAction) -> Result<(), PlanError> {
+        // Shoot requires a real gun present on the field, otherwise we don't need a check
+        let PlanAction::Shoot { building_id } = action else {
+            return Ok(());
+        };
+
+        self.buildings
+            .iter()
+            .find(|building| building.id() == building_id)
+            .filter(|gun| gun.kind().shot_cost().is_some())
+            .map(|_| ())
+            .ok_or(PlanError::NoSuchGun)
+    }
+
     /// Total price of all commands in the plan
     ///
     /// # Panics
     ///
-    /// Panics if the plan holds a command that can't be priced: a shot without its gun on the
-    /// field, or a build of a kind that can't be built.
+    /// Panics if the plan holds a command that can't be priced.
+    /// Such actions should NOT appear in the plan because the logic of `add` is
+    /// encapsulated (see [`Self::add_to_plan`])
     #[must_use]
     pub fn plan_cost(&self, plan: &Plan) -> Cost {
         plan.actions()
@@ -174,7 +235,7 @@ mod tests {
     use super::World;
     use crate::{
         building::{Building, BuildingKind, MINER_RED_START},
-        plan::{MoveDirection, Plan, PlanAction},
+        plan::{MoveDirection, Plan, PlanAction, PlanError},
         player::PlayerSide,
         resources::Cost,
         tile::TilePos,
@@ -200,7 +261,7 @@ mod tests {
     /// Price of a plan holding this single command
     fn price_of(world: &World, action: PlanAction) -> Cost {
         let mut plan = Plan::new();
-        plan.add(action).unwrap();
+        world.add_to_plan(&mut plan, action).unwrap();
 
         world.plan_cost(&plan)
     }
@@ -274,7 +335,7 @@ mod tests {
 
         let mut expected = Cost::ZERO;
         for action in commands {
-            plan.add(action).unwrap();
+            world.add_to_plan(&mut plan, action).unwrap();
             expected = expected + price_of(&world, action);
 
             assert_eq!(world.plan_cost(&plan), expected);
@@ -288,13 +349,71 @@ mod tests {
         let direct_gun = add_shooter(&mut world, BuildingKind::DirectGun, position(6, 5));
 
         let mut plan = Plan::new();
-        plan.add(mortar).unwrap();
-        plan.add(direct_gun).unwrap();
+        world.add_to_plan(&mut plan, mortar).unwrap();
+        world.add_to_plan(&mut plan, direct_gun).unwrap();
         let price = world.plan_cost(&plan);
 
         plan.move_shot(1, MoveDirection::Up).unwrap();
 
         assert_eq!(plan.actions().collect::<Vec<_>>(), vec![direct_gun, mortar]);
         assert_eq!(world.plan_cost(&plan), price);
+    }
+
+    #[test]
+    fn only_a_shot_of_a_weapon_on_the_field_gets_into_the_plan() {
+        let mut world = World::new();
+        let mortar_shot = add_shooter(&mut world, BuildingKind::Mortar, position(5, 5));
+        let miner_shot = PlanAction::Shoot {
+            building_id: world.locate_building(MINER_RED_START).unwrap().id(),
+        };
+        // A building that exists, but was never put onto the field
+        let shot_of_a_missing_gun = PlanAction::Shoot {
+            building_id: Building::new(PlayerSide::Red, position(6, 5), BuildingKind::DirectGun)
+                .id(),
+        };
+
+        let mut plan = Plan::new();
+        assert_eq!(
+            world.add_to_plan(&mut plan, miner_shot),
+            Err(PlanError::NoSuchGun)
+        );
+        assert_eq!(
+            world.add_to_plan(&mut plan, shot_of_a_missing_gun),
+            Err(PlanError::NoSuchGun)
+        );
+        assert_eq!(plan.len(), 0);
+
+        let slot = world.add_to_plan(&mut plan, mortar_shot).unwrap();
+
+        // An edit goes through the same checks, and the rules of the plan hold too
+        assert_eq!(
+            world.replace_in_plan(&mut plan, slot, miner_shot),
+            Err(PlanError::NoSuchGun)
+        );
+        assert_eq!(
+            world.add_to_plan(&mut plan, mortar_shot),
+            Err(PlanError::GunAlreadyFiring)
+        );
+        assert_eq!(plan.get(slot), Some(mortar_shot));
+        assert_eq!(
+            world.plan_cost(&plan),
+            BuildingKind::Mortar.shot_cost().unwrap()
+        );
+    }
+
+    #[test]
+    fn build_of_a_kind_without_a_price_doesnt_get_into_the_plan() {
+        let world = World::new();
+        let reactor = PlanAction::Build {
+            kind: BuildingKind::Reactor,
+            position: position(5, 5),
+        };
+        let mut plan = Plan::new();
+
+        assert_eq!(
+            world.add_to_plan(&mut plan, reactor),
+            Err(PlanError::NotBuildable)
+        );
+        assert_eq!(world.plan_cost(&plan), Cost::ZERO);
     }
 }

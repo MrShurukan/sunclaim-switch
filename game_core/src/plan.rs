@@ -8,9 +8,10 @@ use crate::{
 /// executed in: all builds, then all repairs, then all shots, with the empty slots at the end.
 /// So a slot index means the same for the execution and for the plan list in the UI.
 ///
-/// The plan keeps the rules that need the plan alone: at most [`Plan::MAX_ACTIONS`] commands
-/// and no target used twice. The rules that need the field, like the budget or free tiles,
-/// are the world's to check
+/// The plan keeps the rules that need the plan alone: at most [`Plan::MAX_ACTIONS`] commands,
+/// a kind that can be built and no target used twice. The rules that need the field, like the
+/// gun of a shot, are the world's to check. That is why the commands get into a plan from
+/// outside the core only through [`crate::world::World::add_to_plan`]
 pub struct Plan {
     slots: [Option<PlanAction>; Self::MAX_ACTIONS],
 }
@@ -53,12 +54,17 @@ impl Plan {
     /// # Errors
     ///
     /// This function will return an error if the plan already holds [`Plan::MAX_ACTIONS`]
-    /// commands, or if the command conflicts with one of them: the same tile is built on or
-    /// repaired twice, or the same gun shoots twice.
-    pub fn add(&mut self, action: PlanAction) -> Result<usize, PlanError> {
+    /// commands, if the command can't be planned at all, like a build of the reactor, or if it
+    /// conflicts with one of them: the same tile is built on or repaired twice, or the same gun
+    /// shoots twice.
+    pub(crate) fn add(&mut self, action: PlanAction) -> Result<usize, PlanError> {
         let len = self.len();
         if len == Self::MAX_ACTIONS {
             return Err(PlanError::Full);
+        }
+
+        if let Some(error) = is_impossible(action) {
+            return Err(error);
         }
 
         if let Some(conflict) = self.conflict(action, None) {
@@ -91,14 +97,22 @@ impl Plan {
     /// # Errors
     ///
     /// This function will return an error if the slot is empty or doesn't exist, if the new
-    /// command belongs to another phase than the command it replaces, or if it conflicts with
-    /// one of the other commands, see [`Plan::add`].
-    pub fn replace(&mut self, index: usize, action: PlanAction) -> Result<PlanAction, PlanError> {
+    /// command belongs to another phase than the command it replaces, if it can't be planned at
+    /// all, see [`Plan::add`], or if it conflicts with one of the other commands.
+    pub(crate) fn replace(
+        &mut self,
+        index: usize,
+        action: PlanAction,
+    ) -> Result<PlanAction, PlanError> {
         let previous = self.get(index).ok_or(PlanError::EmptySlot)?;
 
         // A command is edited in place, so it can't turn into a command of another phase
         if previous.phase() != action.phase() {
             return Err(PlanError::PhaseMismatch);
+        }
+
+        if let Some(error) = is_impossible(action) {
+            return Err(error);
         }
 
         if let Some(conflict) = self.conflict(action, Some(index)) {
@@ -168,6 +182,14 @@ impl Plan {
     }
 }
 
+/// Why the command can't be planned at all, whatever the plan and the field are
+fn is_impossible(action: PlanAction) -> Option<PlanError> {
+    match action {
+        PlanAction::Build { kind, .. } if kind.cost().is_none() => Some(PlanError::NotBuildable),
+        _ => None,
+    }
+}
+
 /// Why two commands can't belong to one plan
 fn conflict_between(first: PlanAction, second: PlanAction) -> Option<PlanError> {
     match (first, second) {
@@ -215,6 +237,10 @@ pub enum PlanError {
     TileAlreadyRepaired,
     /// Another shot of the plan is already fired by this gun
     GunAlreadyFiring,
+    /// The kind of the build can't be built: the reactor is starting only
+    NotBuildable,
+    /// The gun of the shot isn't on the field or isn't a weapon
+    NoSuchGun,
 }
 
 /// Direction of a shot move inside the shooting phase
@@ -576,6 +602,21 @@ mod tests {
         // Another gun can shoot in the same plan
         plan.add(shoot()).unwrap();
         assert_eq!(plan.len(), 2);
+    }
+
+    #[test]
+    fn kind_without_a_price_cant_be_built() {
+        let mut plan = Plan::new();
+        let reactor = build(BuildingKind::Reactor, tile(0));
+
+        assert_eq!(plan.add(reactor), Err(PlanError::NotBuildable));
+        assert_eq!(plan.len(), 0);
+
+        // The same rule holds for an edit of an existing command
+        let miner = build(BuildingKind::Miner, tile(0));
+        plan.add(miner).unwrap();
+        assert_eq!(plan.replace(0, reactor), Err(PlanError::NotBuildable));
+        assert_eq!(actions_of(&plan), vec![miner]);
     }
 
     #[test]
