@@ -16,6 +16,12 @@ pub const COLOR_FIELD_BG: Color = Color::rgb(194, 137, 81);
 pub const COLOR_GRID_LINE: Color = Color::WHITE;
 /// Regular UI text
 pub const COLOR_TEXT: Color = Color::WHITE;
+/// Fill of a selected list row or button
+pub const COLOR_SELECTION: Color = Color::rgb(255, 200, 60);
+/// Background of a dialog window
+pub const COLOR_DIALOG_BG: Color = Color::rgb(23, 54, 93);
+/// Translucent black dimming the game behind a dialog
+pub const COLOR_OVERLAY: Color = Color::rgba(0, 0, 0, 150);
 
 // ===== Font sizes =====
 

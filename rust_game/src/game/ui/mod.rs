@@ -2,10 +2,16 @@
 //! relies on: the design theme, screen layout metrics and layout cursors.
 
 use game_core::direction::Direction;
-use game_core::tile::{TilePos, TilePosError};
+use game_core::plan::Plan;
+use game_core::tile::TilePos;
 
+use crate::game::ui::dialog_window::{DialogAction, DialogWindow};
+use crate::game::ui::navigation::{DirectionRepeater, Orientation, Selection};
+
+pub mod dialog_window;
 pub(crate) mod layout;
 pub(crate) mod layout_metrics;
+pub(crate) mod navigation;
 pub(crate) mod panel;
 pub(crate) mod theme;
 
@@ -28,38 +34,11 @@ impl PanelState {
 pub struct UiState {
     panel_state: PanelState,
     cursor_pos: TilePos,
-    direction_hold_info: Option<DirectionHoldInfo>,
-}
-
-#[derive(Debug, Copy, Clone)]
-struct DirectionHoldInfo {
-    direction: Direction,
-    hold_pause_left: f32,
-}
-
-impl DirectionHoldInfo {
-    const FIRST_PRESS_DELAY: f32 = 0.5;
-    const FOLLOWING_PRESS_DELAY: f32 = 0.1;
-
-    fn new_first(direction: Direction) -> Self {
-        Self {
-            direction,
-            hold_pause_left: Self::FIRST_PRESS_DELAY,
-        }
-    }
-
-    fn new_following(direction: Direction) -> Self {
-        Self {
-            direction,
-            hold_pause_left: Self::FOLLOWING_PRESS_DELAY,
-        }
-    }
-}
-
-#[derive(Debug, Copy, Clone, derive_more::From)]
-pub enum CursorMoveError {
-    InvalidCursorPosition(TilePosError),
-    PanelIsOpen,
+    /// The slot of the expanded panel the cursor is on
+    selected_slot: Selection,
+    direction_repeater: DirectionRepeater,
+    /// Blocks other UI logic until dialog is resolved
+    dialog_window: Option<DialogWindow>,
 }
 
 impl UiState {
@@ -68,7 +47,9 @@ impl UiState {
         Self {
             panel_state: PanelState::Minimized,
             cursor_pos: TilePos::new(0, 0).unwrap(),
-            direction_hold_info: None,
+            selected_slot: Selection::new(),
+            direction_repeater: DirectionRepeater::new(),
+            dialog_window: None,
         }
     }
 
@@ -82,57 +63,71 @@ impl UiState {
         self.cursor_pos
     }
 
-    fn try_translate_cursor(&mut self, dir: Direction) -> Result<(), CursorMoveError> {
-        if !matches!(self.panel_state, PanelState::Minimized) {
-            return Err(CursorMoveError::PanelIsOpen);
-        }
-
-        self.cursor_pos = self.cursor_pos.translate(dir)?;
-
-        Ok(())
+    #[must_use]
+    pub const fn selected_slot(&self) -> usize {
+        self.selected_slot.index()
     }
 
-    /// Moves the cursor while a direction is held down: once on the press,
-    /// then repeatedly after a follow-up delay
-    pub fn direction_held(&mut self, dir: Option<Direction>, dt: f32) {
-        // Button released
-        if dir.is_none() {
-            self.direction_hold_info = None;
+    #[must_use]
+    pub fn dialog_window(&self) -> Option<&DialogWindow> {
+        self.dialog_window.as_ref()
+    }
+
+    /// Action of the selected button of the open dialog
+    #[must_use]
+    pub fn selected_dialog_action(&self) -> Option<DialogAction> {
+        self.dialog_window
+            .as_ref()
+            .and_then(DialogWindow::selected_action)
+    }
+
+    /// Moves the cursor while a direction is held down: once on the press, then repeatedly
+    /// after a follow-up delay. The cursor belongs to whatever is on top: a dialog, the
+    /// expanded panel, or else the field
+    pub fn direction_held(&mut self, held: Option<Direction>, dt: f32) {
+        if let Some(direction) = self.direction_repeater.update(held, dt) {
+            self.move_cursor(direction);
+        }
+    }
+
+    /// Sends the move to whatever owns the cursor right now
+    fn move_cursor(&mut self, direction: Direction) {
+        if let Some(dialog) = &mut self.dialog_window {
+            dialog.move_selection(direction);
             return;
         }
 
-        let dir = dir.unwrap();
-
-        match &mut self.direction_hold_info {
-            // First press, we advance the cursor (if possible) and remember the button was pressed
-            None => self.new_direction_pressed(dir),
-
-            // Following presses
-            Some(info) => {
-                // Did we change the direction?
-                if info.direction != dir {
-                    self.new_direction_pressed(dir);
-                    return;
-                }
-
-                // Otherwise proceed to calculate time
-                info.hold_pause_left -= dt;
-                if info.hold_pause_left < 0.0 {
-                    let _ = self.try_translate_cursor(dir);
-                    self.direction_hold_info = Some(DirectionHoldInfo::new_following(dir));
-                }
+        match self.panel_state {
+            PanelState::Minimized => self.move_field_cursor(direction),
+            PanelState::Expanded => {
+                self.selected_slot
+                    .move_in(direction, Orientation::Vertical, Plan::MAX_ACTIONS);
             }
         }
     }
 
-    #[inline]
-    fn new_direction_pressed(&mut self, dir: Direction) {
-        let _ = self.try_translate_cursor(dir);
-
-        self.direction_hold_info = Some(DirectionHoldInfo::new_first(dir));
+    /// The cursor stays where it is at the border of the field
+    fn move_field_cursor(&mut self, direction: Direction) {
+        self.cursor_pos = self
+            .cursor_pos
+            .translate(direction)
+            .unwrap_or(self.cursor_pos);
     }
 
     pub fn toggle_panel(&mut self) {
         self.panel_state = self.panel_state.other();
+
+        // The direction held on the way here isn't meant for what comes next
+        self.direction_repeater.interrupt();
+    }
+
+    pub fn open_dialog(&mut self, dialog: DialogWindow) {
+        self.dialog_window = Some(dialog);
+        self.direction_repeater.interrupt();
+    }
+
+    pub fn close_dialog(&mut self) {
+        self.dialog_window = None;
+        self.direction_repeater.interrupt();
     }
 }

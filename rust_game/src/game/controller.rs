@@ -1,6 +1,8 @@
 use super::input::GameInput;
+use crate::game::ui::dialog_window::{DialogButton, DialogWindow};
 use crate::game::ui::UiState;
 use alloc::string::String;
+use alloc::vec;
 use game_core::{
     plan::Plan,
     world::{TurnPhase, World},
@@ -66,6 +68,12 @@ fn update_plan(session: &mut Session, input: GameInput, dt: f32) {
     // Cursor move
     session.ui_state.direction_held(input.direction_raw, dt);
 
+    // The dialog blocks the rest of the UI until it is resolved
+    if session.ui_state.dialog_window().is_some() {
+        update_dialog(session, input);
+        return;
+    }
+
     // Panel toggle
     if input.panel_toggle {
         session.ui_state.toggle_panel();
@@ -73,6 +81,39 @@ fn update_plan(session: &mut Session, input: GameInput, dt: f32) {
 
     // Finish move
     if input.finish_turn {
-        session.world.finish_turn();
+        session.ui_state.open_dialog(finish_turn_dialog());
     }
+}
+
+fn update_dialog(session: &mut Session, input: GameInput) {
+    if input.cancel {
+        close_dialog(session);
+        return;
+    }
+
+    // Presses the button the cursor is on
+    if input.confirm {
+        if let Some(press) = session.ui_state.selected_dialog_action() {
+            press(session);
+        }
+    }
+}
+
+fn finish_turn_dialog() -> DialogWindow {
+    DialogWindow::new(
+        "Are you ready to finish your turn?",
+        vec![
+            DialogButton::new("Yes", finish_turn),
+            DialogButton::new("No", close_dialog),
+        ],
+    )
+}
+
+fn finish_turn(session: &mut Session) {
+    session.ui_state.close_dialog();
+    session.world.finish_turn();
+}
+
+fn close_dialog(session: &mut Session) {
+    session.ui_state.close_dialog();
 }

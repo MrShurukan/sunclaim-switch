@@ -4,7 +4,7 @@ use super::ui::layout::{
     center_vertically, icon_group_width, icon_group_with_text, RowCursor, RowCursorFromRight,
 };
 use super::ui::layout_metrics::LAYOUT;
-use super::ui::{panel, theme};
+use super::ui::{dialog_window, panel, theme};
 use crate::game::util::SinePulser;
 use crate::raylib::{Color, Frame};
 use alloc::format;
@@ -29,6 +29,11 @@ fn draw_running(session: &Session, assets: &Assets, frame: &mut Frame) {
     draw_field(session, assets, frame);
 
     draw_cursor(session, assets, frame);
+
+    // The dialog goes on top of everything
+    if let Some(dialog) = session.ui_state.dialog_window() {
+        dialog_window::draw(dialog, frame);
+    }
 }
 
 fn draw_top_bar(session: &Session, assets: &Assets, frame: &mut Frame) {

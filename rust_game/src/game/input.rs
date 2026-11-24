@@ -1,11 +1,15 @@
 use crate::raylib::{Button, Gamepad};
 use game_core::direction::Direction;
 
+// The buttons pressed this frame are a set of flags by nature
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Clone, Copy, Default)]
 pub struct GameInput {
     pub reset: bool,
     pub finish_turn: bool,
     pub panel_toggle: bool,
+    pub confirm: bool,
+    pub cancel: bool,
     /// Only has Some on the very frame the button was pressed
     pub direction_pressed: Option<Direction>,
     /// Has Some if direction is held down
@@ -58,6 +62,8 @@ impl GameInput {
 
             finish_turn: gamepad.pressed(Button::Y),
             panel_toggle: gamepad.pressed(Button::Minus),
+            confirm: gamepad.pressed(Button::A),
+            cancel: gamepad.pressed(Button::B),
 
             direction_pressed: Direction::from_gamepad(gamepad),
             direction_raw: Direction::from_gamepad_raw(gamepad),

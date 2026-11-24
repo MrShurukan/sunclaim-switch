@@ -1,13 +1,14 @@
 //! The side panel: a collapsed card of the selected tile, or the expanded
 //! plan overview (once implemented).
 
-use super::layout::{icon_group_with_text, ColumnCursor};
+use super::layout::{center_vertically, icon_group_with_text, ColumnCursor};
 use super::layout_metrics::LAYOUT;
 use super::{theme, PanelState};
 use crate::game::assets::{Assets, Icon, TileDrawable};
 use crate::game::controller::Session;
-use crate::raylib::{Color, Frame, Vec2};
+use crate::raylib::{Color, Frame, Rect, Vec2};
 use alloc::format;
+use game_core::plan::Plan;
 
 /// Offset of the preview icon from the corner of the panel
 const CARD_ICON_OFFSET: Vec2 = Vec2::new(5.0, 6.0);
@@ -23,9 +24,58 @@ pub fn draw(session: &Session, assets: &Assets, frame: &mut Frame) {
     }
 }
 
-/// TODO: The expanded panel slides over the field and shows the plan overview:
-/// four action slots, fixed build/repair rows and reorderable shots
-fn draw_expanded(_session: &Session, _assets: &Assets, _frame: &mut Frame) {}
+/// Height of one slot row of the expanded panel
+const SLOT_HEIGHT: f32 = 40.0;
+/// Gap between the slot rows
+const SLOT_GAP: f32 = 8.0;
+
+/// TODO: The expanded panel slides over the field and shows the full plan overview: fixed
+/// build/repair rows and reorderable shots. For now it only lists the slots
+fn draw_expanded(session: &Session, _assets: &Assets, frame: &mut Frame) {
+    let panel = LAYOUT.side_panel;
+    frame.rect(panel, theme::COLOR_PANEL_BG);
+
+    let selected = session.ui_state.selected_slot();
+    let content_x = panel.x + theme::PADDING_MD;
+    let content_width = panel.width - 2.0 * theme::PADDING_MD;
+    let mut rows = ColumnCursor::new(content_x, panel.y + theme::PADDING_MD, SLOT_GAP);
+
+    for slot in 0..Plan::MAX_ACTIONS {
+        let position = rows.next(SLOT_HEIGHT);
+        let row = Rect::new(position.x, position.y, content_width, SLOT_HEIGHT);
+        let is_selected = slot == selected;
+
+        if is_selected {
+            frame.rect(row, theme::COLOR_SELECTION);
+        }
+
+        // Dark text reads better on the selection
+        let color = if is_selected {
+            theme::COLOR_PANEL_BG
+        } else {
+            theme::COLOR_TEXT
+        };
+        frame.text(
+            &format!("{}. {}", slot + 1, slot_label(session, slot)),
+            (
+                position.x + theme::PADDING_SM,
+                center_vertically(row, theme::LINE_HEIGHT_BODY),
+            )
+                .into(),
+            theme::FONT_SIZE_BODY,
+            color,
+        );
+    }
+}
+
+/// Commands have no names of their own yet
+fn slot_label(session: &Session, slot: usize) -> &'static str {
+    if session.plan.get(slot).is_some() {
+        "Command"
+    } else {
+        "Empty"
+    }
+}
 
 fn draw_minimized(session: &Session, assets: &Assets, frame: &mut Frame) {
     let panel = LAYOUT.side_panel;
