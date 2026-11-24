@@ -34,7 +34,7 @@ fn draw_running(session: &Session, assets: &Assets, frame: &mut Frame) {
 fn draw_top_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
     frame.rect(LAYOUT.top_bar, theme::COLOR_BAR_BG);
 
-    let title_y = center_vertically(LAYOUT.top_bar.height, theme::LINE_HEIGHT_TITLE);
+    let title_y = center_vertically(LAYOUT.top_bar, theme::LINE_HEIGHT_TITLE);
     frame.text(
         &format!(
             "Round {} - {}'s turn",
@@ -58,7 +58,7 @@ fn draw_top_bar(session: &Session, assets: &Assets, frame: &mut Frame) {
     ];
 
     // The rightmost item is consumed first, hence the reverse order
-    let icons_y = center_vertically(LAYOUT.top_bar.height, theme::ROW_HEIGHT_ICON);
+    let icons_y = center_vertically(LAYOUT.top_bar, theme::ROW_HEIGHT_ICON);
     let right_border = LAYOUT.screen.width - theme::PADDING_MD;
     let mut row = RowCursorFromRight::new(right_border, icons_y, theme::GAP_STATUS);
 
@@ -90,7 +90,7 @@ const HINTS: &[(&[Icon], &str)] = &[
 fn draw_bottom_bar(assets: &Assets, frame: &mut Frame) {
     frame.rect(LAYOUT.bottom_bar, theme::COLOR_BAR_BG);
 
-    let y = center_vertically(LAYOUT.bottom_bar.height, theme::ROW_HEIGHT_ICON);
+    let y = center_vertically(LAYOUT.bottom_bar, theme::ROW_HEIGHT_ICON);
     let mut row = RowCursor::new(theme::PADDING_MD, y, theme::GAP_HINT);
 
     for (icons, text) in HINTS {

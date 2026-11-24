@@ -2,12 +2,12 @@
 
 use super::theme;
 use crate::game::aseprite::{AsepriteSheet, AsepriteSheetKey};
-use crate::raylib::{Color, Frame, Vec2};
+use crate::raylib::{Color, Frame, Rect, Vec2};
 
 /// Vertical position of content centered inside a container of `container_height`
 #[must_use]
-pub const fn center_vertically(container_height: f32, content_height: f32) -> f32 {
-    (container_height - content_height) / 2.0
+pub const fn center_vertically(container: Rect, content_height: f32) -> f32 {
+    container.y + (container.height - content_height) / 2.0
 }
 
 /// Hands out positions of rows, top to bottom
